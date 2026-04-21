@@ -1,3 +1,8 @@
+function showOutput(text) {
+  const box = document.getElementById("output");
+  box.style.display = "block";
+  box.innerText = text;
+}
 function showLoader() {
   document.getElementById("loader").classList.remove("hidden");
 }
@@ -19,6 +24,7 @@ function animateOutput(id, text) {
 // Learn Topic
 async function learnTopic() {
   const topic = document.getElementById("topic").value;
+
   showLoader();
 
   const res = await fetch("/api/tutor", {
@@ -27,14 +33,15 @@ async function learnTopic() {
   });
 
   const data = await res.json();
-  hideLoader();
 
-  animateOutput("output", data.result);
+  hideLoader();
+  showOutput(data.result);
 }
 
 // Quiz
 async function generateQuiz() {
   const topic = document.getElementById("topic").value;
+
   showLoader();
 
   const res = await fetch("/api/quiz", {
@@ -43,14 +50,15 @@ async function generateQuiz() {
   });
 
   const data = await res.json();
-  hideLoader();
 
-  animateOutput("output", data.result);
+  hideLoader();
+  showOutput(data.result);
 }
 
 // Chat
 async function chat() {
   const message = document.getElementById("chatInput").value;
+
   showLoader();
 
   const res = await fetch("/api/chat", {
@@ -59,7 +67,14 @@ async function chat() {
   });
 
   const data = await res.json();
-  hideLoader();
 
-  animateOutput("chatOutput", data.result);
+  hideLoader();
+  showOutput(data.result);
+}
+function showLoader() {
+  document.getElementById("loader").classList.remove("hidden");
+}
+
+function hideLoader() {
+  document.getElementById("loader").classList.add("hidden");
 }
