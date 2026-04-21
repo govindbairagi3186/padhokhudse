@@ -6,85 +6,70 @@
 
   <style>
     body {
-      background: radial-gradient(circle at 20% 20%, rgba(255,153,51,0.15), transparent 40%),
-                  radial-gradient(circle at 80% 80%, rgba(19,136,8,0.15), transparent 40%),
-                  #0f172a;
+      background: #0f172a;
+      font-family: system-ui, -apple-system, sans-serif;
     }
 
-    .glass {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
+    .chat-container {
+      max-height: 60vh;
+      overflow-y: auto;
     }
 
-    body::before {
-      content: "🇮🇳";
-      position: fixed;
-      font-size: 200px;
-      opacity: 0.03;
-      top: 20%;
-      left: 30%;
-      transform: rotate(-20deg);
-      pointer-events: none;
+    .user-msg {
+      background: #1f2937;
+    }
+
+    .ai-msg {
+      background: #111827;
     }
   </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center text-white">
+<body class="text-gray-200 flex flex-col items-center min-h-screen">
 
-<div class="w-full max-w-3xl p-6 glass shadow-2xl">
+<!-- HEADER -->
+<h1 class="text-xl mt-6 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
 
-  <!-- TITLE -->
-  <h1 class="text-4xl font-bold text-center mb-6 animate-pulse text-white">
-    PADHOKHUDSE 🇮🇳❤️
-  </h1>
+<!-- CHAT BOX -->
+<div class="w-full max-w-2xl flex flex-col">
+
+  <div id="chatBox" class="chat-container space-y-4 p-4 border border-gray-700 rounded-md">
+
+    <!-- messages appear here -->
+
+  </div>
 
   <!-- INPUT -->
-  <input id="topic"
-    placeholder="Enter any topic..."
-    class="w-full p-3 rounded-lg text-black mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"/>
+  <div class="flex mt-4 gap-2">
+    <input id="topic"
+      placeholder="Ask or enter topic..."
+      class="flex-1 p-3 bg-transparent border border-gray-700 rounded-md outline-none"/>
 
-  <!-- BUTTONS -->
-  <div class="flex gap-3 justify-center">
     <button onclick="learnTopic()" 
-      class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:scale-110 transition">
-      Learn
+      class="px-4 border border-gray-600 rounded-md hover:bg-gray-800">
+      Send
     </button>
+  </div>
 
+  <!-- ACTION BUTTONS -->
+  <div class="flex gap-2 mt-3">
     <button onclick="generateQuiz()" 
-      class="bg-green-400 text-black px-5 py-2 rounded-lg hover:scale-110 transition">
+      class="flex-1 text-sm border border-gray-600 py-2 rounded-md hover:bg-gray-800">
       Quiz
     </button>
   </div>
 
   <!-- LOADER -->
-  <div id="loader" class="hidden text-center mt-4 text-2xl animate-spin">
-    ⏳
+  <div id="loader" class="hidden text-center text-sm text-gray-400 mt-3">
+    AI is thinking...
   </div>
 
-  <!-- OUTPUT -->
-  <div id="output" 
-    class="mt-6 p-5 bg-white text-black rounded-xl shadow-lg hidden">
-  </div>
+</div>
 
-  <!-- CHAT -->
-  <div class="mt-6">
-    <h2 class="text-lg mb-2">💬 Ask Doubt</h2>
-    
-    <input id="chatInput" 
-      class="w-full p-3 rounded text-black"/>
-
-    <button onclick="chat()" 
-      class="mt-2 bg-blue-400 px-4 py-2 rounded">
-      Ask
-    </button>
-
-    <div id="chatOutput"
-      class="mt-4 p-4 bg-white text-black rounded-xl hidden">
-    </div>
-  </div>
-
+<!-- FOOTER -->
+<div class="text-center mt-10 text-xs text-gray-500">
+  <p>Made with ❤️ in India 🇮🇳</p>
+  <p class="mt-1">Govind Vaishnav 💗</p>
 </div>
 
 <script src="script.js"></script>
