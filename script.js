@@ -1,8 +1,15 @@
-function showOutput(text) {
-  const box = document.getElementById("output");
-  box.style.display = "block";
-  box.innerText = text;
+function addMessage(text, type) {
+  const chatBox = document.getElementById("chatBox");
+
+  const msg = document.createElement("div");
+  msg.className = "p-3 rounded-md text-sm " + (type === "user" ? "user-msg self-end" : "ai-msg");
+
+  msg.innerText = text;
+
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 function showLoader() {
   document.getElementById("loader").classList.remove("hidden");
 }
@@ -11,43 +18,33 @@ function hideLoader() {
   document.getElementById("loader").classList.add("hidden");
 }
 
-function animateOutput(id, text) {
-  const box = document.getElementById(id);
-  box.style.opacity = 0;
-
-  setTimeout(() => {
-    box.innerText = text;
-    box.style.opacity = 1;
-  }, 200);
-}
-
-// Learn Topic
+// LEARN
 async function learnTopic() {
   const topic = document.getElementById("topic").value;
+  if (!topic) return;
 
+  addMessage(topic, "user");
   showLoader();
 
-  try {
-    const res = await fetch("/api/tutor", {
-      method: "POST",
-      body: JSON.stringify({ topic })
-    });
+  const res = await fetch("/api/tutor", {
+    method: "POST",
+    body: JSON.stringify({ topic })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    hideLoader();
-    showOutput(data.result);
+  hideLoader();
+  addMessage(data.result, "ai");
 
-  } catch (error) {
-    hideLoader();
-    showOutput("❌ Error: " + error.message);
-  }
+  document.getElementById("topic").value = "";
 }
 
-// Quiz
+// QUIZ
 async function generateQuiz() {
   const topic = document.getElementById("topic").value;
+  if (!topic) return;
 
+  addMessage("Generate quiz on " + topic, "user");
   showLoader();
 
   const res = await fetch("/api/quiz", {
@@ -58,29 +55,5 @@ async function generateQuiz() {
   const data = await res.json();
 
   hideLoader();
-  showOutput(data.result);
-}
-
-// Chat
-async function chat() {
-  const message = document.getElementById("chatInput").value;
-
-  showLoader();
-
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    body: JSON.stringify({ message })
-  });
-
-  const data = await res.json();
-
-  hideLoader();
-  showOutput(data.result);
-}
-function showLoader() {
-  document.getElementById("loader").classList.remove("hidden");
-}
-
-function hideLoader() {
-  document.getElementById("loader").classList.add("hidden");
+  addMessage(data.result, "ai");
 }
