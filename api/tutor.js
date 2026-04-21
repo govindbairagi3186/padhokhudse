@@ -8,16 +8,15 @@ export default async function handler(req, res) {
         "Authorization": "Bearer " + process.env.OPENROUTER_API_KEY,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct",
-        messages: [
-          {
-            role: "user",
-            content: `Explain ${topic} in a detailed and simple way for a student`
-          }
-        ]
-      })
-    });
+     body: JSON.stringify({
+  model: "openchat/openchat-3.5",
+  messages: [
+    {
+      role: "user",
+      content: `Explain ${topic} in a detailed and simple way for a student`
+    }
+  ]
+})
 
     const data = await response.json();
 
