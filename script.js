@@ -27,15 +27,21 @@ async function learnTopic() {
 
   showLoader();
 
-  const res = await fetch("/api/tutor", {
-    method: "POST",
-    body: JSON.stringify({ topic })
-  });
+  try {
+    const res = await fetch("/api/tutor", {
+      method: "POST",
+      body: JSON.stringify({ topic })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  hideLoader();
-  showOutput(data.result);
+    hideLoader();
+    showOutput(data.result);
+
+  } catch (error) {
+    hideLoader();
+    showOutput("❌ Error: " + error.message);
+  }
 }
 
 // Quiz
