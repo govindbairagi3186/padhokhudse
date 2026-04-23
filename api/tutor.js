@@ -3,16 +3,18 @@ export default async function handler(req, res) {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { topic } = body;
 
+    if (!topic) {
+      return res.status(400).json({ result: "❌ Please enter a topic" });
+    }
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + process.env.OPENROUTER_API_KEY,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://padhokhudse.vercel.app",
-        "X-Title": "PADHOKHUDSE"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemma-2-9b-it",
+        model: "openrouter/auto", // ✅ AUTO FIXES ALL MODEL ISSUES
         messages: [
           {
             role: "user",
