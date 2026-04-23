@@ -1,10 +1,28 @@
 let chats = JSON.parse(localStorage.getItem("chats")) || {};
 let currentChat = null;
 
-// 📂 CREATE NEW CHAT
+// 🔐 LOGIN
+function showLogin() {
+  document.getElementById("landing").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
+}
+
+function login() {
+  const name = document.getElementById("username").value;
+  if (!name) return;
+
+  localStorage.setItem("user", name);
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+
+  newChat();
+  renderHistory();
+}
+
+// 📂 NEW CHAT
 function newChat() {
   const id = "chat_" + Date.now();
-  chats[id] = [];
+  chats[id] = { title: "New Chat", messages: [] };
   currentChat = id;
   saveChats();
   renderHistory();
@@ -16,89 +34,102 @@ function saveChats() {
   localStorage.setItem("chats", JSON.stringify(chats));
 }
 
-// 📚 SIDEBAR
+// 📚 HISTORY
 function renderHistory() {
   const history = document.getElementById("history");
   history.innerHTML = "";
 
   Object.keys(chats).forEach(id => {
-    const btn = document.createElement("button");
-    btn.className = "w-full text-left p-2 bg-gray-800 rounded";
+    const div = document.createElement("div");
+    div.className = "p-2 bg-gray-800 rounded flex justify-between items-center";
 
-    const firstMsg = chats[id][0]?.text || "New Chat";
-    btn.innerText = firstMsg.slice(0, 20);
+    const title = document.createElement("span");
+    title.innerText = chats[id].title.slice(0,15);
 
-    btn.onclick = () => {
+    title.onclick = () => {
       currentChat = id;
       renderChat();
     };
 
-    history.appendChild(btn);
+    // ✏️ rename
+    const rename = document.createElement("button");
+    rename.innerText = "✏️";
+    rename.onclick = () => {
+      const newName = prompt("Rename chat:");
+      if (newName) chats[id].title = newName;
+      saveChats();
+      renderHistory();
+    };
+
+    // 🗑 delete
+    const del = document.createElement("button");
+    del.innerText = "🗑";
+    del.onclick = () => {
+      delete chats[id];
+      currentChat = null;
+      saveChats();
+      renderHistory();
+      document.getElementById("chatBox").innerHTML = "";
+    };
+
+    div.append(title, rename, del);
+    history.appendChild(div);
   });
 }
 
-// 💬 RENDER CHAT
+// 💬 CHAT RENDER
 function renderChat() {
-  const chatBox = document.getElementById("chatBox");
-  chatBox.innerHTML = "";
+  const box = document.getElementById("chatBox");
+  box.innerHTML = "";
 
-  if (!currentChat) return;
-
-  chats[currentChat].forEach(msg => {
-    addMessage(msg.text, msg.type, false);
+  chats[currentChat].messages.forEach(m => {
+    addMessage(m.text, m.type, false);
   });
 }
 
-// ➕ ADD MESSAGE
-function addMessage(text, type, save = true) {
-  const chatBox = document.getElementById("chatBox");
+// 🧠 MARKDOWN FORMAT
+function format(text) {
+  return text
+    .replace(/## (.*)/g, "<h2>$1</h2>")
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/- (.*)/g, "<li>$1</li>")
+    .replace(/\n/g, "<br>");
+}
 
-  const msg = document.createElement("div");
-  msg.className = "p-3 rounded max-w-[75%] " +
-    (type === "user" ? "user ml-auto" : "ai");
+// ➕ MESSAGE
+function addMessage(text, type, save=true) {
+  const box = document.getElementById("chatBox");
 
-  msg.innerText = text;
-  chatBox.appendChild(msg);
+  const div = document.createElement("div");
+  div.className = "p-3 rounded max-w-[75%] " +
+    (type==="user" ? "user ml-auto" : "ai");
 
-  chatBox.scrollTop = chatBox.scrollHeight;
+  div.innerHTML = type==="ai" ? format(text) : text;
+
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
 
   if (save && currentChat) {
-    chats[currentChat].push({ text, type });
+    chats[currentChat].messages.push({text,type});
     saveChats();
-    renderHistory();
   }
 }
 
-// 🤖 AI CALL
+// 🤖 AI
 async function learnTopic() {
   const topic = document.getElementById("topic").value;
-  if (!topic || !currentChat) return;
+  if (!topic) return;
 
-  addMessage(topic, "user");
-  document.getElementById("topic").value = "";
+  addMessage(topic,"user");
 
-  document.getElementById("loader").classList.remove("hidden");
+  const res = await fetch("/api/tutor", {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({topic})
+  });
 
-  try {
-    const res = await fetch("/api/tutor", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ topic })
-    });
+  const data = await res.json();
+  addMessage(data.result,"ai");
 
-    const data = await res.json();
-
-    document.getElementById("loader").classList.add("hidden");
-    addMessage(data.result, "ai");
-
-  } catch (err) {
-    document.getElementById("loader").classList.add("hidden");
-    addMessage("Error: " + err.message, "ai");
-  }
+  document.getElementById("topic").value="";
 }
-
-// INIT
-newChat();
-renderHistory();
