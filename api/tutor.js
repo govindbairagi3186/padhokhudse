@@ -13,12 +13,14 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "user",
-            content: `Explain ${topic} clearly like ChatGPT.
+            content: `Explain ${topic} clearly, structured and fast.
 
-- Use headings if needed
-- Use bullets if needed
-- Keep it structured naturally (not fixed format)
-- Make it easy and interesting`
+Use:
+- short sections
+- bullets
+- examples if needed
+
+Keep it simple and engaging.`
           }
         ]
       })
