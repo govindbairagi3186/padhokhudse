@@ -1,10 +1,16 @@
-let historyStack = [];
-let forwardStack = [];
+let progress = { quizzes: 0, correct: 0 };
 
-// THEME
+// 🌗 THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
+  updateThemeIcon();
 }
+
+function updateThemeIcon(){
+  themeBtn.innerText = document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
+}
+
+updateThemeIcon();
 
 // NAV
 function showLogin(){
@@ -16,29 +22,10 @@ function login(){
   const name=username.value;
   if(!name) return;
 
-  localStorage.setItem("user",name);
-
   loginPage.style.display="none";
   app.style.display="flex";
 
-  newChat();
-
-  addAI(`Hey ${name}! 👋 I'm your AI tutor. Ask anything 🚀`);
-}
-
-// CHAT NAV
-function goBack(){
-  if(historyStack.length){
-    forwardStack.push(chatBox.innerHTML);
-    chatBox.innerHTML=historyStack.pop();
-  }
-}
-
-function goForward(){
-  if(forwardStack.length){
-    historyStack.push(chatBox.innerHTML);
-    chatBox.innerHTML=forwardStack.pop();
-  }
+  addAI(`Hey ${name}! 👋 Ask anything 🚀`);
 }
 
 // CHAT
@@ -47,72 +34,47 @@ function newChat(){
 }
 
 function addUser(text){
-  historyStack.push(chatBox.innerHTML);
-  forwardStack=[];
-
   const div=document.createElement("div");
-  div.className="chat-user ml-auto max-w-xl p-3 rounded-lg";
+  div.className="chat-user ml-auto max-w-xl p-3 rounded";
   div.innerText=text;
   chatBox.appendChild(div);
 }
 
 function addAI(text){
   const div=document.createElement("div");
-  div.className="chat-ai max-w-xl p-3 rounded-lg";
+  div.className="chat-ai max-w-xl p-3 rounded";
   chatBox.appendChild(div);
-
-  streamText(div, formatAI(text));
+  stream(div, format(text));
 }
 
-// ⚡ NON-BLOCKING STREAM (IMPORTANT FIX)
-function streamText(el, text){
-  let i = 0;
-
-  function render(){
-    if(i < text.length){
-      el.innerHTML = text.slice(0, i);
-      i += 5;
-
-      // 🔥 runs independently of scroll
-      setTimeout(render, 5);
-    } else {
-      el.innerHTML = text;
-    }
+// FAST STREAM
+function stream(el, text){
+  let i=0;
+  function run(){
+    if(i<text.length){
+      el.innerHTML=text.slice(0,i);
+      i+=6;
+      setTimeout(run,5);
+    } else el.innerHTML=text;
   }
-
-  render();
+  run();
 }
 
 // FORMAT
-function formatAI(text){
-  return text
-    .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
-    .replace(/\n/g,"<br>")
-    .replace(/- /g,"• ");
-}
-
-// SCROLL
-function scrollBottom(){
-  chatBox.scrollTop=chatBox.scrollHeight;
-}
-
-// QUICK
-function quickTopic(t){
-  showLogin();
-  setTimeout(()=>{ topic.value=t },500);
+function format(t){
+  return t.replace(/\n/g,"<br>").replace(/- /g,"• ");
 }
 
 // AI
 async function learnTopic(){
-  const input=topic;
-  const text=input.value;
+  const text=topic.value;
   if(!text) return;
 
   addUser(text);
-  input.value="";
+  topic.value="";
 
   const div=document.createElement("div");
-  div.className="chat-ai max-w-xl p-3 rounded-lg";
+  div.className="chat-ai p-3 rounded";
   div.innerText="⚡ Thinking...";
   chatBox.appendChild(div);
 
@@ -125,5 +87,38 @@ async function learnTopic(){
   const data=await res.json();
 
   div.innerHTML="";
-  streamText(div, formatAI(data.result));
+  stream(div, format(data.result));
+}
+
+// QUIZ
+async function generateQuiz(){
+  const text=topic.value;
+  if(!text) return alert("Enter topic first");
+
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:`Create 3 MCQ quiz on ${text}`})
+  });
+
+  const data=await res.json();
+  addAI("📝 Quiz:\n\n"+data.result);
+
+  progress.quizzes++;
+}
+
+// DASHBOARD
+function showDashboard(){
+  addAI(`📊 Progress Dashboard
+
+Total Quizzes: ${progress.quizzes}
+Correct Answers: ${progress.correct}
+
+Keep learning 🚀`);
+}
+
+// QUICK
+function quickTopic(t){
+  showLogin();
+  setTimeout(()=>topic.value=t,500);
 }
