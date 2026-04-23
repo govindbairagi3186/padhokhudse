@@ -1,8 +1,41 @@
-let chats = JSON.parse(localStorage.getItem("chats")) || {};
+let chats = {};
 let currentChat = null;
 
-// LOGIN
-function showLogin(){ landing.style.display="none"; loginPage.style.display="flex"; }
+// 🌗 THEME
+function updateThemeIcon(){
+  const btn=document.getElementById("themeBtn");
+  if(document.documentElement.classList.contains("dark")){
+    btn.innerText="🌙";
+  } else {
+    btn.innerText="☀️";
+  }
+}
+
+function toggleTheme(){
+  const html=document.documentElement;
+  if(html.classList.contains("dark")){
+    html.classList.remove("dark");
+    localStorage.setItem("theme","light");
+  } else {
+    html.classList.add("dark");
+    localStorage.setItem("theme","dark");
+  }
+  updateThemeIcon();
+}
+
+(function(){
+  const saved=localStorage.getItem("theme");
+  if(saved==="dark"){
+    document.documentElement.classList.add("dark");
+  }
+  updateThemeIcon();
+})();
+
+// NAV
+function showLogin(){
+  landing.style.display="none";
+  loginPage.style.display="flex";
+}
 
 function login(){
   const name=username.value;
@@ -11,130 +44,87 @@ function login(){
   localStorage.setItem("user",name);
   loginPage.style.display="none";
   app.style.display="flex";
+  cursorGlow.style.display="none";
 
   newChat();
 
-  setTimeout(()=>{
-    addMessage(`Hey ${name}! 👋
+  addAI(`Hey ${name}! 👋😊
 
-I'm your AI tutor 😊  
-Ask me anything and I’ll explain it simply.
+I'm your AI tutor 🤖  
+Ask me anything and I’ll explain it in a simple way ✨
 
-What do you want to learn today? 🚀`,"ai");
-  },500);
-
-  renderHistory();
+What do you want to learn today? 🚀`);
 }
 
-// NEW CHAT
+// CHAT
 function newChat(){
-  const id="chat_"+Date.now();
-  chats[id]={messages:[]};
-  currentChat=id;
-  saveChats(); renderHistory(); renderChat();
+  chatBox.innerHTML="";
 }
 
-function saveChats(){ localStorage.setItem("chats",JSON.stringify(chats)); }
-
-// HISTORY
-function renderHistory(){
-  history.innerHTML="";
-  Object.keys(chats).forEach(id=>{
-    const div=document.createElement("div");
-    div.className="p-2 bg-gray-800 rounded flex justify-between";
-
-    const title=document.createElement("span");
-    title.innerText="Chat";
-    title.onclick=()=>{currentChat=id;renderChat();};
-
-    const del=document.createElement("button");
-    del.innerText="🗑";
-    del.onclick=()=>{delete chats[id]; saveChats(); renderHistory(); chatBox.innerHTML="";};
-
-    div.append(title,del);
-    history.appendChild(div);
-  });
+function addUser(text){
+  const div=document.createElement("div");
+  div.className="chat-user ml-auto max-w-xl p-3 rounded-lg";
+  div.innerText=text;
+  chatBox.appendChild(div);
 }
 
-// FORMAT
-function format(text){
-  text=text.replace(/```([\s\S]*?)```/g,(m,code)=>{
-    return `<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>${code}</code></pre>`;
-  });
-
-  return text
-    .replace(/## Topic Overview/g,"📘 <b>Topic Overview</b>")
-    .replace(/## Key Points/g,"🧠 <b>Key Points</b>")
-    .replace(/## Example/g,"💡 <b>Example</b>")
-    .replace(/## Summary/g,"📌 <b>Summary</b>")
-    .replace(/- /g,"• ")
-    .replace(/\n/g,"<br>");
+function addAI(text){
+  const div=document.createElement("div");
+  div.className="chat-ai max-w-xl p-3 rounded-lg";
+  chatBox.appendChild(div);
+  typeStream(div,text);
 }
 
-// COPY
-function copyCode(btn){
-  const code=btn.nextElementSibling.innerText;
-  navigator.clipboard.writeText(code);
-  btn.innerText="Copied!";
-  setTimeout(()=>btn.innerText="Copy",1500);
-}
-
-// TYPE
-function typeStream(el,html){
+// STREAM
+function typeStream(el,text){
   let i=0;
   function t(){
-    if(i<html.length){
-      el.innerHTML=html.slice(0,i)+'<span class="cursor"></span>';
-      i+=3;
+    if(i<text.length){
+      el.innerHTML=text.slice(0,i)+"<span class='cursor'></span>";
+      i+=2;
       setTimeout(t,10);
-    } else el.innerHTML=html;
+    } else el.innerHTML=text;
   }
   t();
 }
 
-// MESSAGE
-function addMessage(text,type,save=true){
-  const div=document.createElement("div");
-  div.className="p-3 rounded-xl max-w-[75%] "+(type==="user"?"user ml-auto":"ai");
-
-  if(type==="ai") typeStream(div,format(text));
-  else div.innerText=text;
-
-  chatBox.appendChild(div);
+// SCROLL
+function scrollBottom(){
   chatBox.scrollTop=chatBox.scrollHeight;
-
-  if(save){
-    chats[currentChat].messages.push({text,type});
-    saveChats();
-  }
 }
 
 // LOADER
 function showLoader(){
   const d=document.createElement("div");
   d.id="loader";
-  d.innerText="Thinking...";
+  d.innerText="🤖 Thinking...";
   chatBox.appendChild(d);
 }
-function hideLoader(){ const l=document.getElementById("loader"); if(l) l.remove(); }
+
+function hideLoader(){
+  const l=document.getElementById("loader");
+  if(l) l.remove();
+}
 
 // AI
 async function learnTopic(){
   const input=document.getElementById("topic");
-  const topic=input.value;
-  if(!topic) return;
+  const text=input.value;
+  if(!text) return;
 
-  addMessage(topic,"user");
+  addUser(text);
   input.value="";
   showLoader();
 
   const res=await fetch("/api/tutor",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({topic})
+    body:JSON.stringify({topic:text})
   });
 
   const data=await res.json();
   hideLoader();
-  addMessage(data.result,"ai");
+
+  addAI(data.result);
+  scrollBottom();
 }
