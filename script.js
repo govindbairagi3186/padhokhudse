@@ -3,17 +3,33 @@ let currentChat = null;
 
 // LOGIN
 function showLogin(){ landing.style.display="none"; loginPage.style.display="flex"; }
+
 function login(){
-  localStorage.setItem("user",username.value);
+  const name=username.value;
+  if(!name) return;
+
+  localStorage.setItem("user",name);
   loginPage.style.display="none";
   app.style.display="flex";
-  newChat(); renderHistory();
+
+  newChat();
+
+  setTimeout(()=>{
+    addMessage(`Hey ${name}! 👋
+
+I'm your AI tutor 😊  
+Ask me anything and I’ll explain it simply.
+
+What do you want to learn today? 🚀`,"ai");
+  },500);
+
+  renderHistory();
 }
 
 // NEW CHAT
 function newChat(){
   const id="chat_"+Date.now();
-  chats[id]={title:"New Chat",messages:[]};
+  chats[id]={messages:[]};
   currentChat=id;
   saveChats(); renderHistory(); renderChat();
 }
@@ -28,7 +44,7 @@ function renderHistory(){
     div.className="p-2 bg-gray-800 rounded flex justify-between";
 
     const title=document.createElement("span");
-    title.innerText=chats[id].title.slice(0,15);
+    title.innerText="Chat";
     title.onclick=()=>{currentChat=id;renderChat();};
 
     const del=document.createElement("button");
@@ -63,7 +79,7 @@ function copyCode(btn){
   setTimeout(()=>btn.innerText="Copy",1500);
 }
 
-// TYPE STREAM
+// TYPE
 function typeStream(el,html){
   let i=0;
   function t(){
@@ -104,11 +120,12 @@ function hideLoader(){ const l=document.getElementById("loader"); if(l) l.remove
 
 // AI
 async function learnTopic(){
-  const topic=document.getElementById("topic").value;
+  const input=document.getElementById("topic");
+  const topic=input.value;
   if(!topic) return;
 
   addMessage(topic,"user");
-  topic.value="";
+  input.value="";
   showLoader();
 
   const res=await fetch("/api/tutor",{
