@@ -5,108 +5,70 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    body {
-      background: #0f172a;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
+    body { background:#0f172a; font-family:system-ui; }
 
-    .ai-msg {
-      line-height: 1.6;
-    }
-
-    .card {
-      background: #111827;
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
     }
 
-    .fade-in {
-      animation: fadeIn 1s ease forwards;
-    }
+    .user { background: linear-gradient(135deg,#3b82f6,#6366f1); }
+    .ai { background:#1f2937; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .book-loader {
-      font-size: 22px;
-      animation: bounce 1s infinite;
-    }
-
-    @keyframes bounce {
-      0%,100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
+    .fade { animation: fade .3s ease; }
+    @keyframes fade { from{opacity:0} to{opacity:1} }
   </style>
 </head>
 
-<body class="text-gray-200 min-h-screen flex flex-col items-center justify-center">
+<body class="text-gray-200 flex h-screen">
 
-  <!-- LANDING PAGE -->
-  <div id="homePage" class="text-center max-w-xl px-6 fade-in">
+<!-- SIDEBAR -->
+<div class="w-64 glass p-4 flex flex-col">
 
-    <h1 class="text-3xl font-semibold mb-4">
-      PADHOKHUDSE 🇮🇳❤️
-    </h1>
+  <h1 class="text-lg mb-4">📚 Chats</h1>
 
-    <p class="text-gray-400 mb-6">
-      Learn anything with AI. Ask doubts, understand concepts, and grow smarter.
-    </p>
+  <button onclick="newChat()" 
+    class="mb-3 p-2 bg-blue-500 rounded text-sm">
+    + New Chat
+  </button>
 
-    <div class="card p-4 mb-6 text-sm text-gray-300">
-      🎯 <b>Aim:</b> To help students learn topics in a simple and descriptive way using AI.
-    </div>
+  <div id="history" class="flex-1 overflow-y-auto space-y-2 text-sm"></div>
 
-    <p class="text-sm text-gray-500 mb-6">
-      Created by <span class="text-white">Govind Vaishnav 💗</span>
-    </p>
+  <div class="text-xs text-gray-500 mt-4">
+    Govind Vaishnav 💗
+  </div>
+</div>
 
-    <button onclick="startApp()" 
-      class="px-6 py-2 border border-gray-600 rounded-md hover:bg-gray-800 transition">
-      Start Learning →
+<!-- MAIN -->
+<div class="flex-1 flex flex-col p-4">
+
+  <h1 class="text-center mb-2">PADHOKHUDSE 🇮🇳❤️</h1>
+
+  <!-- CHAT -->
+  <div id="chatBox"
+    class="flex-1 overflow-y-auto space-y-3 p-4 glass rounded-lg">
+  </div>
+
+  <!-- INPUT -->
+  <div class="flex gap-2 mt-3">
+    <input id="topic"
+      class="flex-1 p-3 bg-[#111827] rounded outline-none"
+      placeholder="Ask anything..." />
+
+    <button onclick="learnTopic()"
+      class="px-4 bg-blue-500 rounded">
+      Send
     </button>
   </div>
 
-  <!-- CHAT APP -->
-  <div id="appPage" class="hidden w-full max-w-2xl fade-in px-4">
-
-    <h1 class="text-xl mb-4 text-center">PADHOKHUDSE 🇮🇳❤️</h1>
-
-    <div id="chatBox"
-      class="space-y-4 p-4 border border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
-    </div>
-
-    <div class="flex mt-4 gap-2">
-      <input id="topic"
-        placeholder="Ask anything..."
-        class="flex-1 p-3 bg-transparent border border-gray-700 rounded-md outline-none"/>
-
-      <button onclick="learnTopic()"
-        class="px-4 border border-gray-600 rounded-md hover:bg-gray-800">
-        Send
-      </button>
-    </div>
-
-    <div id="loader" class="hidden text-center mt-4 text-gray-400">
-      <div class="book-loader">📖📚📖</div>
-      <p class="text-sm mt-1">AI is reading and preparing your answer...</p>
-    </div>
+  <!-- LOADER -->
+  <div id="loader" class="hidden text-center text-sm mt-2">
+    📖 AI thinking...
   </div>
 
-  <!-- FOOTER -->
-  <div class="absolute bottom-4 text-xs text-gray-500 text-center">
-    Made with ❤️ in India 🇮🇳
-  </div>
+</div>
 
-  <script src="script.js"></script>
-
-  <script>
-    function startApp() {
-      document.getElementById("homePage").classList.add("hidden");
-      document.getElementById("appPage").classList.remove("hidden");
-    }
-  </script>
-
+<script src="script.js"></script>
 </body>
 </html>
