@@ -1,51 +1,83 @@
-function addMessage(text, type) {
+let chats = JSON.parse(localStorage.getItem("chats")) || {};
+let currentChat = null;
+
+// 📂 CREATE NEW CHAT
+function newChat() {
+  const id = "chat_" + Date.now();
+  chats[id] = [];
+  currentChat = id;
+  saveChats();
+  renderHistory();
+  renderChat();
+}
+
+// 💾 SAVE
+function saveChats() {
+  localStorage.setItem("chats", JSON.stringify(chats));
+}
+
+// 📚 SIDEBAR
+function renderHistory() {
+  const history = document.getElementById("history");
+  history.innerHTML = "";
+
+  Object.keys(chats).forEach(id => {
+    const btn = document.createElement("button");
+    btn.className = "w-full text-left p-2 bg-gray-800 rounded";
+
+    const firstMsg = chats[id][0]?.text || "New Chat";
+    btn.innerText = firstMsg.slice(0, 20);
+
+    btn.onclick = () => {
+      currentChat = id;
+      renderChat();
+    };
+
+    history.appendChild(btn);
+  });
+}
+
+// 💬 RENDER CHAT
+function renderChat() {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = "";
+
+  if (!currentChat) return;
+
+  chats[currentChat].forEach(msg => {
+    addMessage(msg.text, msg.type, false);
+  });
+}
+
+// ➕ ADD MESSAGE
+function addMessage(text, type, save = true) {
   const chatBox = document.getElementById("chatBox");
 
   const msg = document.createElement("div");
-  msg.className = "p-3 rounded-md text-sm " +
-    (type === "user" ? "bg-gray-700" : "bg-gray-900");
+  msg.className = "p-3 rounded max-w-[75%] " +
+    (type === "user" ? "user ml-auto" : "ai");
 
-  if (type === "ai") {
-    typeWriter(msg, text); // typing effect
-  } else {
-    msg.innerText = text;
-  }
-
+  msg.innerText = text;
   chatBox.appendChild(msg);
+
   chatBox.scrollTop = chatBox.scrollHeight;
-}
 
-// ✨ TYPING EFFECT
-function typeWriter(element, text) {
-  let i = 0;
-  element.innerHTML = "";
-
-  function typing() {
-    if (i < text.length) {
-      element.innerHTML += text.charAt(i);
-      i++;
-      setTimeout(typing, 15); // speed
-    }
+  if (save && currentChat) {
+    chats[currentChat].push({ text, type });
+    saveChats();
+    renderHistory();
   }
-
-  typing();
 }
 
-function showLoader() {
-  document.getElementById("loader").classList.remove("hidden");
-}
-
-function hideLoader() {
-  document.getElementById("loader").classList.add("hidden");
-}
-
-// 🚀 MAIN FUNCTION
+// 🤖 AI CALL
 async function learnTopic() {
   const topic = document.getElementById("topic").value;
-  if (!topic) return;
+  if (!topic || !currentChat) return;
 
   addMessage(topic, "user");
-  showLoader();
+  document.getElementById("topic").value = "";
+
+  document.getElementById("loader").classList.remove("hidden");
 
   try {
     const res = await fetch("/api/tutor", {
@@ -58,21 +90,15 @@ async function learnTopic() {
 
     const data = await res.json();
 
-    hideLoader();
-    addMessage(formatText(data.result), "ai");
+    document.getElementById("loader").classList.add("hidden");
+    addMessage(data.result, "ai");
 
-  } catch (error) {
-    hideLoader();
-    addMessage("❌ Error: " + error.message, "ai");
+  } catch (err) {
+    document.getElementById("loader").classList.add("hidden");
+    addMessage("Error: " + err.message, "ai");
   }
-
-  document.getElementById("topic").value = "";
 }
 
-// 🧠 FORMAT TEXT (HEADINGS + BULLETS)
-function formatText(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>") // bold
-    .replace(/\n/g, "<br>") // line break
-    .replace(/- /g, "• "); // bullets
-}
+// INIT
+newChat();
+renderHistory();
