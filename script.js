@@ -2,13 +2,33 @@ function addMessage(text, type) {
   const chatBox = document.getElementById("chatBox");
 
   const msg = document.createElement("div");
-  msg.className = "p-3 rounded-md text-sm " + 
-    (type === "user" ? "bg-gray-700 fade-in" : "bg-gray-900 fade-in");
+  msg.className = "p-3 rounded-md text-sm " +
+    (type === "user" ? "bg-gray-700" : "bg-gray-900");
 
-  msg.innerText = text;
+  if (type === "ai") {
+    typeWriter(msg, text); // typing effect
+  } else {
+    msg.innerText = text;
+  }
 
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ✨ TYPING EFFECT
+function typeWriter(element, text) {
+  let i = 0;
+  element.innerHTML = "";
+
+  function typing() {
+    if (i < text.length) {
+      element.innerHTML += text.charAt(i);
+      i++;
+      setTimeout(typing, 15); // speed
+    }
+  }
+
+  typing();
 }
 
 function showLoader() {
@@ -19,6 +39,7 @@ function hideLoader() {
   document.getElementById("loader").classList.add("hidden");
 }
 
+// 🚀 MAIN FUNCTION
 async function learnTopic() {
   const topic = document.getElementById("topic").value;
   if (!topic) return;
@@ -29,13 +50,16 @@ async function learnTopic() {
   try {
     const res = await fetch("/api/tutor", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ topic })
     });
 
     const data = await res.json();
 
     hideLoader();
-    addMessage(data.result, "ai");
+    addMessage(formatText(data.result), "ai");
 
   } catch (error) {
     hideLoader();
@@ -43,4 +67,12 @@ async function learnTopic() {
   }
 
   document.getElementById("topic").value = "";
+}
+
+// 🧠 FORMAT TEXT (HEADINGS + BULLETS)
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>") // bold
+    .replace(/\n/g, "<br>") // line break
+    .replace(/- /g, "• "); // bullets
 }
