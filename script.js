@@ -1,6 +1,6 @@
 let progress = { quizzes: 0, correct: 0 };
 
-// 🌗 THEME
+// THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
   updateThemeIcon();
@@ -9,7 +9,6 @@ function toggleTheme(){
 function updateThemeIcon(){
   themeBtn.innerText = document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
 }
-
 updateThemeIcon();
 
 // NAV
@@ -38,6 +37,7 @@ function addUser(text){
   div.className="chat-user ml-auto max-w-xl p-3 rounded";
   div.innerText=text;
   chatBox.appendChild(div);
+  scrollBottom();
 }
 
 function addAI(text){
@@ -45,6 +45,7 @@ function addAI(text){
   div.className="chat-ai max-w-xl p-3 rounded";
   chatBox.appendChild(div);
   stream(div, format(text));
+  scrollBottom();
 }
 
 // FAST STREAM
@@ -63,6 +64,11 @@ function stream(el, text){
 // FORMAT
 function format(t){
   return t.replace(/\n/g,"<br>").replace(/- /g,"• ");
+}
+
+// SCROLL
+function scrollBottom(){
+  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
 // AI
@@ -98,27 +104,68 @@ async function generateQuiz(){
   const res=await fetch("/api/tutor",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({topic:`Create 3 MCQ quiz on ${text}`})
+    body:JSON.stringify({
+      topic:`Create 3 MCQ quiz on ${text} in JSON format:
+[
+{question:"", options:["A","B","C","D"], answer:0}
+]`
+    })
   });
 
   const data=await res.json();
-  addAI("📝 Quiz:\n\n"+data.result);
 
+  let quiz;
+  try {
+    quiz = JSON.parse(data.result);
+  } catch {
+    addAI("❌ Quiz error. Try again.");
+    return;
+  }
+
+  renderQuiz(quiz);
+}
+
+function renderQuiz(quiz){
+  const container=document.createElement("div");
+  container.className="chat-ai p-4 rounded";
+
+  quiz.forEach((q,i)=>{
+    const qDiv=document.createElement("div");
+    qDiv.innerHTML=`<b>Q${i+1}. ${q.question}</b>`;
+
+    q.options.forEach((opt,idx)=>{
+      const btn=document.createElement("button");
+      btn.innerText=opt;
+      btn.className="block w-full mt-2 p-2 border rounded";
+
+      btn.onclick=()=>{
+        if(idx===q.answer){
+          btn.style.background="green";
+          btn.innerText+=" ✅";
+          progress.correct++;
+        } else {
+          btn.style.background="red";
+          btn.innerText+=" ❌";
+        }
+      };
+
+      qDiv.appendChild(btn);
+    });
+
+    container.appendChild(qDiv);
+  });
+
+  chatBox.appendChild(container);
   progress.quizzes++;
+  scrollBottom();
 }
 
 // DASHBOARD
 function showDashboard(){
-  addAI(`📊 Progress Dashboard
+  addAI(`📊 Progress
 
-Total Quizzes: ${progress.quizzes}
-Correct Answers: ${progress.correct}
+Quizzes: ${progress.quizzes}
+Correct: ${progress.correct}
 
-Keep learning 🚀`);
-}
-
-// QUICK
-function quickTopic(t){
-  showLogin();
-  setTimeout(()=>topic.value=t,500);
+Keep going 🚀`);
 }
