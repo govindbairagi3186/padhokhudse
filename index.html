@@ -10,52 +10,69 @@
       font-family: system-ui, -apple-system, sans-serif;
     }
 
-    .chat-container {
-      max-height: 60vh;
-      overflow-y: auto;
-    }
+    .hidden { display: none; }
 
-    .user-msg {
-      background: #1f2937;
-    }
-
-    .ai-msg {
+    .card {
       background: #111827;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+    }
+
+    .btn:hover {
+      background: #1f2937;
     }
   </style>
 </head>
 
-<body class="text-gray-200 flex flex-col items-center min-h-screen">
+<body class="text-gray-200 min-h-screen flex flex-col items-center justify-center">
 
-<!-- HEADER -->
-<h1 class="text-xl mt-6 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
+<!-- 🌟 LANDING PAGE -->
+<div id="homePage" class="text-center max-w-xl px-6">
 
-<!-- CHAT BOX -->
-<div class="w-full max-w-2xl flex flex-col">
+  <h1 class="text-3xl font-semibold mb-4">
+    PADHOKHUDSE 🇮🇳❤️
+  </h1>
 
-  <div id="chatBox" class="chat-container space-y-4 p-4 border border-gray-700 rounded-md">
+  <p class="text-gray-400 mb-6">
+    Learn anything, anytime with AI.  
+    Ask doubts, understand concepts, and grow smarter every day.
+  </p>
 
-    <!-- messages appear here -->
-
+  <!-- AIM -->
+  <div class="card p-4 mb-6 text-sm text-gray-300">
+    🎯 <b>Aim:</b>  
+    To provide a simple AI-powered platform where students can learn any topic in a clear and descriptive way and resolve doubts instantly.
   </div>
+
+  <!-- AUTHOR -->
+  <p class="text-sm text-gray-500 mb-6">
+    Created by <span class="text-white">Govind Vaishnav 💗</span>
+  </p>
+
+  <button onclick="startApp()" 
+    class="px-6 py-2 border border-gray-600 rounded-md btn transition">
+    Start Learning →
+  </button>
+
+</div>
+
+<!-- 💬 CHAT APP -->
+<div id="appPage" class="hidden w-full max-w-2xl">
+
+  <h1 class="text-xl mb-4 text-center">PADHOKHUDSE 🇮🇳❤️</h1>
+
+  <!-- CHAT BOX -->
+  <div id="chatBox" class="space-y-4 p-4 border border-gray-700 rounded-md max-h-[60vh] overflow-y-auto"></div>
 
   <!-- INPUT -->
   <div class="flex mt-4 gap-2">
     <input id="topic"
-      placeholder="Ask or enter topic..."
+      placeholder="Ask anything..."
       class="flex-1 p-3 bg-transparent border border-gray-700 rounded-md outline-none"/>
 
     <button onclick="learnTopic()" 
-      class="px-4 border border-gray-600 rounded-md hover:bg-gray-800">
+      class="px-4 border border-gray-600 rounded-md btn">
       Send
-    </button>
-  </div>
-
-  <!-- ACTION BUTTONS -->
-  <div class="flex gap-2 mt-3">
-    <button onclick="generateQuiz()" 
-      class="flex-1 text-sm border border-gray-600 py-2 rounded-md hover:bg-gray-800">
-      Quiz
     </button>
   </div>
 
@@ -67,11 +84,18 @@
 </div>
 
 <!-- FOOTER -->
-<div class="text-center mt-10 text-xs text-gray-500">
-  <p>Made with ❤️ in India 🇮🇳 Mathura 🚩</p>
-  <p class="mt-1">Govind Vaishnav 💗</p>
+<div class="absolute bottom-4 text-xs text-gray-500 text-center">
+  Made with ❤️ in India 🇮🇳
 </div>
 
 <script src="script.js"></script>
+
+<script>
+function startApp() {
+  document.getElementById("homePage").classList.add("hidden");
+  document.getElementById("appPage").classList.remove("hidden");
+}
+</script>
+
 </body>
 </html>
