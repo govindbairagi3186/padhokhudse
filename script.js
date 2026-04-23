@@ -2,22 +2,9 @@ let historyStack = [];
 let forwardStack = [];
 
 // THEME
-function updateThemeIcon(){
-  themeBtn.innerText = document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
-}
-
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
-  localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark":"light");
-  updateThemeIcon();
 }
-
-(function(){
-  if(localStorage.getItem("theme")==="dark"){
-    document.documentElement.classList.add("dark");
-  }
-  updateThemeIcon();
-})();
 
 // NAV
 function showLogin(){
@@ -30,31 +17,27 @@ function login(){
   if(!name) return;
 
   localStorage.setItem("user",name);
+
   loginPage.style.display="none";
   app.style.display="flex";
 
   newChat();
 
-  addAI(`Hey ${name}! 👋😊
-
-I'm your AI tutor 🤖  
-Ask anything and I’ll explain it clearly and in a fun way 🎯✨
-
-What do you want to learn today? 🚀`);
+  addAI(`Hey ${name}! 👋 I'm your AI tutor. Ask anything 🚀`);
 }
 
-// NAVIGATION STACK
+// CHAT NAV
 function goBack(){
   if(historyStack.length){
     forwardStack.push(chatBox.innerHTML);
-    chatBox.innerHTML = historyStack.pop();
+    chatBox.innerHTML=historyStack.pop();
   }
 }
 
 function goForward(){
   if(forwardStack.length){
     historyStack.push(chatBox.innerHTML);
-    chatBox.innerHTML = forwardStack.pop();
+    chatBox.innerHTML=forwardStack.pop();
   }
 }
 
@@ -77,20 +60,35 @@ function addAI(text){
   const div=document.createElement("div");
   div.className="chat-ai max-w-xl p-3 rounded-lg";
   chatBox.appendChild(div);
-  typeStream(div,text);
+
+  streamText(div, formatAI(text));
 }
 
-// TYPE
-function typeStream(el,text){
-  let i=0;
-  function t(){
-    if(i<text.length){
-      el.innerHTML=text.slice(0,i);
-      i+=2;
-      setTimeout(t,10);
-    } else el.innerHTML=text;
+// ⚡ NON-BLOCKING STREAM (IMPORTANT FIX)
+function streamText(el, text){
+  let i = 0;
+
+  function render(){
+    if(i < text.length){
+      el.innerHTML = text.slice(0, i);
+      i += 5;
+
+      // 🔥 runs independently of scroll
+      setTimeout(render, 5);
+    } else {
+      el.innerHTML = text;
+    }
   }
-  t();
+
+  render();
+}
+
+// FORMAT
+function formatAI(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
+    .replace(/\n/g,"<br>")
+    .replace(/- /g,"• ");
 }
 
 // SCROLL
@@ -98,20 +96,25 @@ function scrollBottom(){
   chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// QUICK TOPIC
-function quickTopic(topic){
+// QUICK
+function quickTopic(t){
   showLogin();
-  setTimeout(()=>{ document.getElementById("topic").value=topic; },500);
+  setTimeout(()=>{ topic.value=t },500);
 }
 
 // AI
 async function learnTopic(){
-  const input=document.getElementById("topic");
+  const input=topic;
   const text=input.value;
   if(!text) return;
 
   addUser(text);
   input.value="";
+
+  const div=document.createElement("div");
+  div.className="chat-ai max-w-xl p-3 rounded-lg";
+  div.innerText="⚡ Thinking...";
+  chatBox.appendChild(div);
 
   const res=await fetch("/api/tutor",{
     method:"POST",
@@ -120,6 +123,7 @@ async function learnTopic(){
   });
 
   const data=await res.json();
-  addAI(data.result);
-  scrollBottom();
+
+  div.innerHTML="";
+  streamText(div, formatAI(data.result));
 }
