@@ -1,21 +1,18 @@
 export default async function handler(req, res) {
   try {
-    // ✅ Safe parsing
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { topic } = body;
-
-    if (!topic) {
-      return res.status(400).json({ result: "❌ Please enter a topic" });
-    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + process.env.OPENROUTER_API_KEY,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://padhokhudse.vercel.app",
+        "X-Title": "PADHOKHUDSE"
       },
       body: JSON.stringify({
-        model: "google/gemma-2-9b-it", // ✅ Working model
+        model: "google/gemma-2-9b-it",
         messages: [
           {
             role: "user",
@@ -30,7 +27,7 @@ Simple explanation
 - point 3
 
 ## Example
-Give a real example
+Give example
 
 ## Summary
 Short conclusion`
@@ -41,7 +38,6 @@ Short conclusion`
 
     const data = await response.json();
 
-    // ✅ Handle API errors
     if (!data.choices) {
       return res.status(500).json({
         result: "❌ API Error: " + JSON.stringify(data)
