@@ -13,14 +13,14 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "user",
-            content: `Explain ${topic} in this format:
+            content: `Explain ${topic} like a friendly teacher in simple words.
 
 ## Topic Overview
-Simple explanation
+Explain simply
 
 ## Key Points
-- point 1
-- point 2
+- point
+- point
 
 ## Example
 Give example
