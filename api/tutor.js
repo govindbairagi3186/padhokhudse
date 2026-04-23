@@ -1,8 +1,12 @@
 export default async function handler(req, res) {
   try {
-    // ✅ SAFE BODY PARSING
+    // ✅ Safe parsing
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { topic } = body;
+
+    if (!topic) {
+      return res.status(400).json({ result: "❌ Please enter a topic" });
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -11,7 +15,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "microsoft/phi-3-mini-128k-instruct",
+        model: "google/gemma-2-9b-it", // ✅ Working model
         messages: [
           {
             role: "user",
@@ -26,18 +30,18 @@ Simple explanation
 - point 3
 
 ## Example
-Give example
+Give a real example
 
 ## Summary
 Short conclusion`
           }
         ]
       })
-    }); // ✅ THIS WAS MISSING
+    });
 
     const data = await response.json();
 
-    // 🔴 HANDLE ERRORS
+    // ✅ Handle API errors
     if (!data.choices) {
       return res.status(500).json({
         result: "❌ API Error: " + JSON.stringify(data)
