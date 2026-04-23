@@ -1,135 +1,123 @@
 let chats = JSON.parse(localStorage.getItem("chats")) || {};
 let currentChat = null;
 
-// 🔐 LOGIN
-function showLogin() {
-  document.getElementById("landing").classList.add("hidden");
-  document.getElementById("loginPage").classList.remove("hidden");
+// LOGIN
+function showLogin(){ landing.style.display="none"; loginPage.style.display="flex"; }
+function login(){
+  localStorage.setItem("user",username.value);
+  loginPage.style.display="none";
+  app.style.display="flex";
+  newChat(); renderHistory();
 }
 
-function login() {
-  const name = document.getElementById("username").value;
-  if (!name) return;
-
-  localStorage.setItem("user", name);
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-
-  newChat();
-  renderHistory();
+// NEW CHAT
+function newChat(){
+  const id="chat_"+Date.now();
+  chats[id]={title:"New Chat",messages:[]};
+  currentChat=id;
+  saveChats(); renderHistory(); renderChat();
 }
 
-// 📂 NEW CHAT
-function newChat() {
-  const id = "chat_" + Date.now();
-  chats[id] = { title: "New Chat", messages: [] };
-  currentChat = id;
-  saveChats();
-  renderHistory();
-  renderChat();
-}
+function saveChats(){ localStorage.setItem("chats",JSON.stringify(chats)); }
 
-// 💾 SAVE
-function saveChats() {
-  localStorage.setItem("chats", JSON.stringify(chats));
-}
+// HISTORY
+function renderHistory(){
+  history.innerHTML="";
+  Object.keys(chats).forEach(id=>{
+    const div=document.createElement("div");
+    div.className="p-2 bg-gray-800 rounded flex justify-between";
 
-// 📚 HISTORY
-function renderHistory() {
-  const history = document.getElementById("history");
-  history.innerHTML = "";
+    const title=document.createElement("span");
+    title.innerText=chats[id].title.slice(0,15);
+    title.onclick=()=>{currentChat=id;renderChat();};
 
-  Object.keys(chats).forEach(id => {
-    const div = document.createElement("div");
-    div.className = "p-2 bg-gray-800 rounded flex justify-between items-center";
+    const del=document.createElement("button");
+    del.innerText="🗑";
+    del.onclick=()=>{delete chats[id]; saveChats(); renderHistory(); chatBox.innerHTML="";};
 
-    const title = document.createElement("span");
-    title.innerText = chats[id].title.slice(0,15);
-
-    title.onclick = () => {
-      currentChat = id;
-      renderChat();
-    };
-
-    // ✏️ rename
-    const rename = document.createElement("button");
-    rename.innerText = "✏️";
-    rename.onclick = () => {
-      const newName = prompt("Rename chat:");
-      if (newName) chats[id].title = newName;
-      saveChats();
-      renderHistory();
-    };
-
-    // 🗑 delete
-    const del = document.createElement("button");
-    del.innerText = "🗑";
-    del.onclick = () => {
-      delete chats[id];
-      currentChat = null;
-      saveChats();
-      renderHistory();
-      document.getElementById("chatBox").innerHTML = "";
-    };
-
-    div.append(title, rename, del);
+    div.append(title,del);
     history.appendChild(div);
   });
 }
 
-// 💬 CHAT RENDER
-function renderChat() {
-  const box = document.getElementById("chatBox");
-  box.innerHTML = "";
-
-  chats[currentChat].messages.forEach(m => {
-    addMessage(m.text, m.type, false);
+// FORMAT
+function format(text){
+  text=text.replace(/```([\s\S]*?)```/g,(m,code)=>{
+    return `<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>${code}</code></pre>`;
   });
-}
 
-// 🧠 MARKDOWN FORMAT
-function format(text) {
   return text
-    .replace(/## (.*)/g, "<h2>$1</h2>")
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/- (.*)/g, "<li>$1</li>")
-    .replace(/\n/g, "<br>");
+    .replace(/## Topic Overview/g,"📘 <b>Topic Overview</b>")
+    .replace(/## Key Points/g,"🧠 <b>Key Points</b>")
+    .replace(/## Example/g,"💡 <b>Example</b>")
+    .replace(/## Summary/g,"📌 <b>Summary</b>")
+    .replace(/- /g,"• ")
+    .replace(/\n/g,"<br>");
 }
 
-// ➕ MESSAGE
-function addMessage(text, type, save=true) {
-  const box = document.getElementById("chatBox");
+// COPY
+function copyCode(btn){
+  const code=btn.nextElementSibling.innerText;
+  navigator.clipboard.writeText(code);
+  btn.innerText="Copied!";
+  setTimeout(()=>btn.innerText="Copy",1500);
+}
 
-  const div = document.createElement("div");
-  div.className = "p-3 rounded max-w-[75%] " +
-    (type==="user" ? "user ml-auto" : "ai");
+// TYPE STREAM
+function typeStream(el,html){
+  let i=0;
+  function t(){
+    if(i<html.length){
+      el.innerHTML=html.slice(0,i)+'<span class="cursor"></span>';
+      i+=3;
+      setTimeout(t,10);
+    } else el.innerHTML=html;
+  }
+  t();
+}
 
-  div.innerHTML = type==="ai" ? format(text) : text;
+// MESSAGE
+function addMessage(text,type,save=true){
+  const div=document.createElement("div");
+  div.className="p-3 rounded-xl max-w-[75%] "+(type==="user"?"user ml-auto":"ai");
 
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+  if(type==="ai") typeStream(div,format(text));
+  else div.innerText=text;
 
-  if (save && currentChat) {
+  chatBox.appendChild(div);
+  chatBox.scrollTop=chatBox.scrollHeight;
+
+  if(save){
     chats[currentChat].messages.push({text,type});
     saveChats();
   }
 }
 
-// 🤖 AI
-async function learnTopic() {
-  const topic = document.getElementById("topic").value;
-  if (!topic) return;
+// LOADER
+function showLoader(){
+  const d=document.createElement("div");
+  d.id="loader";
+  d.innerText="Thinking...";
+  chatBox.appendChild(d);
+}
+function hideLoader(){ const l=document.getElementById("loader"); if(l) l.remove(); }
+
+// AI
+async function learnTopic(){
+  const topic=document.getElementById("topic").value;
+  if(!topic) return;
 
   addMessage(topic,"user");
+  topic.value="";
+  showLoader();
 
-  const res = await fetch("/api/tutor", {
+  const res=await fetch("/api/tutor",{
     method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({topic})
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic})
   });
 
-  const data = await res.json();
+  const data=await res.json();
+  hideLoader();
   addMessage(data.result,"ai");
-
-  document.getElementById("topic").value="";
 }
