@@ -1,11 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { topic } = body;
-
-    if (!topic) {
-      return res.status(400).json({ result: "❌ Please enter a topic" });
-    }
+    const { topic } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -14,7 +9,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openrouter/auto", // ✅ AUTO FIXES ALL MODEL ISSUES
+        model: "openrouter/auto",
         messages: [
           {
             role: "user",
@@ -26,7 +21,6 @@ Simple explanation
 ## Key Points
 - point 1
 - point 2
-- point 3
 
 ## Example
 Give example
@@ -41,18 +35,14 @@ Short conclusion`
     const data = await response.json();
 
     if (!data.choices) {
-      return res.status(500).json({
-        result: "❌ API Error: " + JSON.stringify(data)
-      });
+      return res.status(500).json({ result: "❌ API Error: " + JSON.stringify(data) });
     }
 
     res.status(200).json({
       result: data.choices[0].message.content
     });
 
-  } catch (error) {
-    res.status(500).json({
-      result: "❌ Server Error: " + error.message
-    });
+  } catch (err) {
+    res.status(500).json({ result: "❌ Server Error: " + err.message });
   }
 }
