@@ -14,13 +14,7 @@ export default async function handler(req, res) {
           {
             role: "user",
             content: `Explain ${topic} clearly, structured and fast.
-
-Use:
-- short sections
-- bullets
-- examples if needed
-
-Keep it simple and engaging.`
+Use bullets, examples and simple language.`
           }
         ]
       })
