@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    // ✅ SAFE BODY PARSING (works for Vercel)
+    // ✅ SAFE BODY PARSING
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const { topic } = body;
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openchat/openchat-3.5",
+        model: "microsoft/phi-3-mini-128k-instruct",
         messages: [
           {
             role: "user",
@@ -33,11 +33,11 @@ Short conclusion`
           }
         ]
       })
-    });
+    }); // ✅ THIS WAS MISSING
 
     const data = await response.json();
 
-    // 🔴 HANDLE ERRORS PROPERLY
+    // 🔴 HANDLE ERRORS
     if (!data.choices) {
       return res.status(500).json({
         result: "❌ API Error: " + JSON.stringify(data)
