@@ -10,16 +10,31 @@
       font-family: system-ui, -apple-system, sans-serif;
     }
 
-    .hidden { display: none; }
-
     .card {
       background: #111827;
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 16px;
     }
 
-    .btn:hover {
-      background: #1f2937;
+    /* fade animation */
+    .fade-in {
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* book loader animation */
+    .book-loader {
+      font-size: 22px;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
   </style>
 </head>
@@ -27,21 +42,20 @@
 <body class="text-gray-200 min-h-screen flex flex-col items-center justify-center">
 
 <!-- 🌟 LANDING PAGE -->
-<div id="homePage" class="text-center max-w-xl px-6">
+<div id="homePage" class="text-center max-w-xl px-6 fade-in">
 
   <h1 class="text-3xl font-semibold mb-4">
     PADHOKHUDSE 🇮🇳❤️
   </h1>
 
   <p class="text-gray-400 mb-6">
-    Learn anything, anytime with AI.  
-    Ask doubts, understand concepts, and grow smarter every day.
+    Learn anything with AI. Ask doubts, understand concepts, and grow smarter.
   </p>
 
   <!-- AIM -->
   <div class="card p-4 mb-6 text-sm text-gray-300">
     🎯 <b>Aim:</b>  
-    To provide a simple AI-powered platform where students can learn any topic in a clear and descriptive way and resolve doubts instantly.
+    To help students learn topics in a simple and descriptive way using AI.
   </div>
 
   <!-- AUTHOR -->
@@ -50,19 +64,21 @@
   </p>
 
   <button onclick="startApp()" 
-    class="px-6 py-2 border border-gray-600 rounded-md btn transition">
+    class="px-6 py-2 border border-gray-600 rounded-md hover:bg-gray-800 transition">
     Start Learning →
   </button>
 
 </div>
 
 <!-- 💬 CHAT APP -->
-<div id="appPage" class="hidden w-full max-w-2xl">
+<div id="appPage" class="hidden w-full max-w-2xl fade-in">
 
   <h1 class="text-xl mb-4 text-center">PADHOKHUDSE 🇮🇳❤️</h1>
 
-  <!-- CHAT BOX -->
-  <div id="chatBox" class="space-y-4 p-4 border border-gray-700 rounded-md max-h-[60vh] overflow-y-auto"></div>
+  <!-- CHAT -->
+  <div id="chatBox" 
+    class="space-y-4 p-4 border border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
+  </div>
 
   <!-- INPUT -->
   <div class="flex mt-4 gap-2">
@@ -71,14 +87,15 @@
       class="flex-1 p-3 bg-transparent border border-gray-700 rounded-md outline-none"/>
 
     <button onclick="learnTopic()" 
-      class="px-4 border border-gray-600 rounded-md btn">
+      class="px-4 border border-gray-600 rounded-md hover:bg-gray-800">
       Send
     </button>
   </div>
 
-  <!-- LOADER -->
-  <div id="loader" class="hidden text-center text-sm text-gray-400 mt-3">
-    AI is thinking...
+  <!-- 📚 COOL LOADER -->
+  <div id="loader" class="hidden text-center mt-4 text-gray-400">
+    <div class="book-loader">📖📚📖</div>
+    <p class="text-sm mt-1">AI is reading and preparing your answer...</p>
   </div>
 
 </div>
