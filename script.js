@@ -1,31 +1,19 @@
-let chats = {};
-let currentChat = null;
+let historyStack = [];
+let forwardStack = [];
 
-// 🌗 THEME
+// THEME
 function updateThemeIcon(){
-  const btn=document.getElementById("themeBtn");
-  if(document.documentElement.classList.contains("dark")){
-    btn.innerText="🌙";
-  } else {
-    btn.innerText="☀️";
-  }
+  themeBtn.innerText = document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
 }
 
 function toggleTheme(){
-  const html=document.documentElement;
-  if(html.classList.contains("dark")){
-    html.classList.remove("dark");
-    localStorage.setItem("theme","light");
-  } else {
-    html.classList.add("dark");
-    localStorage.setItem("theme","dark");
-  }
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark":"light");
   updateThemeIcon();
 }
 
 (function(){
-  const saved=localStorage.getItem("theme");
-  if(saved==="dark"){
+  if(localStorage.getItem("theme")==="dark"){
     document.documentElement.classList.add("dark");
   }
   updateThemeIcon();
@@ -44,16 +32,30 @@ function login(){
   localStorage.setItem("user",name);
   loginPage.style.display="none";
   app.style.display="flex";
-  cursorGlow.style.display="none";
 
   newChat();
 
   addAI(`Hey ${name}! 👋😊
 
 I'm your AI tutor 🤖  
-Ask me anything and I’ll explain it in a simple way ✨
+Ask anything and I’ll explain it clearly and in a fun way 🎯✨
 
 What do you want to learn today? 🚀`);
+}
+
+// NAVIGATION STACK
+function goBack(){
+  if(historyStack.length){
+    forwardStack.push(chatBox.innerHTML);
+    chatBox.innerHTML = historyStack.pop();
+  }
+}
+
+function goForward(){
+  if(forwardStack.length){
+    historyStack.push(chatBox.innerHTML);
+    chatBox.innerHTML = forwardStack.pop();
+  }
 }
 
 // CHAT
@@ -62,6 +64,9 @@ function newChat(){
 }
 
 function addUser(text){
+  historyStack.push(chatBox.innerHTML);
+  forwardStack=[];
+
   const div=document.createElement("div");
   div.className="chat-user ml-auto max-w-xl p-3 rounded-lg";
   div.innerText=text;
@@ -75,12 +80,12 @@ function addAI(text){
   typeStream(div,text);
 }
 
-// STREAM
+// TYPE
 function typeStream(el,text){
   let i=0;
   function t(){
     if(i<text.length){
-      el.innerHTML=text.slice(0,i)+"<span class='cursor'></span>";
+      el.innerHTML=text.slice(0,i);
       i+=2;
       setTimeout(t,10);
     } else el.innerHTML=text;
@@ -93,17 +98,10 @@ function scrollBottom(){
   chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// LOADER
-function showLoader(){
-  const d=document.createElement("div");
-  d.id="loader";
-  d.innerText="🤖 Thinking...";
-  chatBox.appendChild(d);
-}
-
-function hideLoader(){
-  const l=document.getElementById("loader");
-  if(l) l.remove();
+// QUICK TOPIC
+function quickTopic(topic){
+  showLogin();
+  setTimeout(()=>{ document.getElementById("topic").value=topic; },500);
 }
 
 // AI
@@ -114,7 +112,6 @@ async function learnTopic(){
 
   addUser(text);
   input.value="";
-  showLoader();
 
   const res=await fetch("/api/tutor",{
     method:"POST",
@@ -123,8 +120,6 @@ async function learnTopic(){
   });
 
   const data=await res.json();
-  hideLoader();
-
   addAI(data.result);
   scrollBottom();
 }
