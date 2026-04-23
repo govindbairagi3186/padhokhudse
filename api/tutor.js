@@ -11,12 +11,27 @@ export default async function handler(req, res) {
      body: JSON.stringify({
   model: "openchat/openchat-3.5",
   messages: [
-    {
-      role: "user",
-      content: `Explain ${topic} in a detailed and simple way for a student`
-    }
-  ]
-})
+  {
+    role: "user",
+    content: `Explain ${topic} in a clear and structured way using this format:
+
+## Topic Overview
+Give a simple explanation.
+
+## Key Points
+- Point 1
+- Point 2
+- Point 3
+
+## Example
+Give a real-life or practical example.
+
+## Summary
+Give a short conclusion.
+
+Use simple language for students.`
+  }
+]
 
     const data = await response.json();
 
