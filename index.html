@@ -11,7 +11,7 @@
       overflow: hidden;
     }
 
-    /* 🖱 Cursor Glow */
+    /* Cursor Glow */
     #cursorGlow {
       position: fixed;
       width: 200px;
@@ -29,10 +29,8 @@
       transition: 0.3s;
     }
 
-    /* ✨ POP HOVER */
     .glass:hover {
       transform: scale(1.05);
-      border: 1px solid rgba(255,255,255,0.3);
     }
 
     .user { background: linear-gradient(135deg,#3b82f6,#6366f1); }
@@ -71,12 +69,10 @@
 
 <body class="text-gray-200">
 
-<!-- 🖱 CURSOR EFFECT -->
 <div id="cursorGlow"></div>
 
-<!-- 🌟 LANDING -->
-<div id="landing" class="h-screen flex flex-col justify-center items-center text-center px-6 relative z-10">
-
+<!-- LANDING -->
+<div id="landing" class="h-screen flex flex-col justify-center items-center text-center px-6 z-10 relative">
   <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
     PADHOKHUDSE 🇮🇳❤️
   </h1>
@@ -95,7 +91,7 @@
   </button>
 </div>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="loginPage" class="hidden h-screen flex justify-center items-center z-10 relative">
   <div class="glass p-6 rounded-xl w-80 text-center">
     <h2 class="text-xl mb-2">Welcome 👋</h2>
@@ -106,29 +102,28 @@
   </div>
 </div>
 
-<!-- 💬 APP -->
+<!-- APP -->
 <div id="app" class="hidden flex h-screen z-10 relative">
 
-<div class="w-64 glass p-3 flex flex-col">
-  <button onclick="newChat()" class="mb-3 bg-blue-500 p-2 rounded">+ New Chat</button>
-  <div id="history" class="flex-1 overflow-y-auto space-y-2"></div>
-</div>
-
-<div class="flex-1 flex flex-col p-4">
-  <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 p-4 glass rounded-xl"></div>
-
-  <div class="flex mt-3 gap-2">
-    <input id="topic" placeholder="Ask anything..."
-      class="flex-1 p-3 bg-[#020617] rounded border border-gray-700"/>
-    <button onclick="learnTopic()" class="px-4 bg-blue-500 rounded">Send</button>
+  <div class="w-64 glass p-3 flex flex-col">
+    <button onclick="newChat()" class="mb-3 bg-blue-500 p-2 rounded">+ New Chat</button>
+    <div id="history" class="flex-1 overflow-y-auto space-y-2"></div>
   </div>
-</div>
+
+  <div class="flex-1 flex flex-col p-4">
+    <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 p-4 glass rounded-xl"></div>
+
+    <div class="flex mt-3 gap-2">
+      <input id="topic" placeholder="Ask anything..."
+        class="flex-1 p-3 bg-[#020617] rounded border border-gray-700"/>
+      <button onclick="learnTopic()" class="px-4 bg-blue-500 rounded">Send</button>
+    </div>
+  </div>
 
 </div>
 
 <script src="script.js"></script>
 
-<!-- 🖱 CURSOR SCRIPT -->
 <script>
 document.addEventListener("mousemove", e => {
   const glow = document.getElementById("cursorGlow");
