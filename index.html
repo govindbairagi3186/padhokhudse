@@ -11,12 +11,8 @@
   <style>
     body { font-family: system-ui; }
 
-    .hover-pop {
-      transition: 0.3s;
-    }
-    .hover-pop:hover {
-      transform: scale(1.05);
-    }
+    .hover-pop { transition:0.3s }
+    .hover-pop:hover { transform:scale(1.05) }
 
     .chat-user {
       background: linear-gradient(135deg,#3b82f6,#9333ea);
@@ -24,7 +20,7 @@
     }
 
     .chat-ai {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.06);
     }
 
     .scroll-btn {
@@ -41,81 +37,61 @@
 
 <body class="bg-white dark:bg-[#0f172a] text-black dark:text-gray-200 transition">
 
-<!-- 🌗 THEME -->
 <button id="themeBtn" onclick="toggleTheme()"
-  class="fixed top-4 right-4 z-50 px-3 py-1 rounded bg-gray-200 dark:bg-gray-800">
-</button>
+class="fixed top-4 right-4 z-50 px-3 py-1 rounded bg-gray-200 dark:bg-gray-800"></button>
 
-<!-- 🌟 FRONT PAGE -->
+<!-- FRONT -->
 <div id="landing" class="h-screen flex flex-col justify-center items-center text-center px-6">
 
-  <h1 class="text-5xl font-bold text-blue-500 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
+<h1 class="text-5xl font-bold text-blue-500 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
 
-  <p class="text-lg max-w-xl mb-6 text-gray-500 dark:text-gray-400">
-    🎯 Aim: To make learning simple, interactive and accessible using AI so every student can understand concepts easily.
-  </p>
+<p class="text-gray-500 max-w-xl mb-6">
+🎯 Aim: Learn topics easily with AI in a simple and interactive way.
+</p>
 
-  <!-- Recommendations -->
-  <div class="flex flex-wrap gap-2 justify-center mb-6">
-    <button onclick="quickTopic('Java Programming')" class="hover-pop px-3 py-1 bg-blue-500 text-white rounded">Java</button>
-    <button onclick="quickTopic('Algebra Basics')" class="hover-pop px-3 py-1 bg-green-500 text-white rounded">Algebra</button>
-    <button onclick="quickTopic('Artificial Intelligence')" class="hover-pop px-3 py-1 bg-purple-500 text-white rounded">AI</button>
-    <button onclick="quickTopic('Indian Constitution')" class="hover-pop px-3 py-1 bg-pink-500 text-white rounded">Society</button>
-    <button onclick="quickTopic('Internet Working')" class="hover-pop px-3 py-1 bg-yellow-500 text-black rounded">Internet</button>
-  </div>
+<div class="flex flex-wrap gap-2 justify-center mb-6">
+<button onclick="quickTopic('Python')" class="hover-pop bg-blue-500 text-white px-3 py-1 rounded">Python</button>
+<button onclick="quickTopic('Algebra')" class="hover-pop bg-green-500 text-white px-3 py-1 rounded">Algebra</button>
+<button onclick="quickTopic('AI')" class="hover-pop bg-purple-500 text-white px-3 py-1 rounded">AI</button>
+</div>
 
-  <button onclick="showLogin()" class="bg-blue-500 text-white px-6 py-2 rounded hover-pop">
-    Start Learning →
-  </button>
+<button onclick="showLogin()" class="bg-blue-500 text-white px-6 py-2 rounded">
+Start →
+</button>
 
-  <p class="absolute bottom-4 text-sm text-gray-500">
-    Made with ❤️ in 🇮🇳 by <b>GOVIND VAISHNAV 💗</b>
-  </p>
+<p class="absolute bottom-4 text-sm text-gray-500">
+Made with ❤️ in 🇮🇳 by <b>GOVIND VAISHNAV 💗</b>
+</p>
 
 </div>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="loginPage" class="hidden h-screen flex justify-center items-center">
-  <div class="p-6 rounded-xl shadow-lg bg-white dark:bg-[#1e293b] w-80 text-center hover-pop">
-    <h2 class="text-xl mb-2">Welcome 👋</h2>
-    <input id="username" placeholder="Enter your name"
-      class="w-full p-2 rounded border mt-2 text-black"/>
-    <button onclick="login()" class="mt-3 w-full bg-blue-500 text-white p-2 rounded">
-      Continue
-    </button>
-  </div>
+<div class="p-6 bg-white dark:bg-[#1e293b] rounded w-80 text-center">
+<input id="username" placeholder="Your name" class="w-full p-2 text-black"/>
+<button onclick="login()" class="mt-3 bg-blue-500 text-white w-full p-2 rounded">Continue</button>
+</div>
 </div>
 
-<!-- 💬 APP -->
+<!-- APP -->
 <div id="app" class="hidden flex h-screen">
 
-<!-- SIDEBAR -->
-<div class="w-64 bg-gray-100 dark:bg-[#020617] p-3 flex flex-col">
-  <button onclick="newChat()" class="bg-blue-500 text-white p-2 rounded mb-3 hover-pop">
-    + New Chat
-  </button>
-
-  <button onclick="goBack()" class="mb-2 bg-gray-400 p-1 rounded">⬅ Back</button>
-  <button onclick="goForward()" class="mb-3 bg-gray-400 p-1 rounded">➡ Forward</button>
-
-  <div id="history"></div>
+<div class="w-60 bg-gray-100 dark:bg-[#020617] p-3">
+<button onclick="newChat()" class="bg-blue-500 text-white w-full p-2 rounded mb-3">+ New</button>
+<button onclick="goBack()" class="w-full mb-1">⬅ Back</button>
+<button onclick="goForward()" class="w-full mb-3">➡ Forward</button>
 </div>
 
-<!-- CHAT -->
 <div class="flex-1 flex flex-col relative">
 
-  <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+<div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-  <div class="scroll-btn text-white" onclick="scrollBottom()">⬇️</div>
+<div class="scroll-btn text-white" onclick="scrollBottom()">⬇️</div>
 
-  <div class="p-4 border-t dark:border-gray-700 flex gap-2">
-    <input id="topic"
-      class="flex-1 p-3 rounded border bg-white dark:bg-[#020617]"
-      placeholder="Ask anything..." />
-    <button onclick="learnTopic()" class="bg-blue-500 text-white px-4 rounded">
-      Send
-    </button>
-  </div>
+<div class="p-4 flex gap-2 border-t dark:border-gray-700">
+<input id="topic" class="flex-1 p-3 bg-white dark:bg-[#020617] rounded border" placeholder="Ask anything...">
+<button onclick="learnTopic()" class="bg-blue-500 text-white px-4 rounded">Send</button>
+</div>
 
 </div>
 </div>
