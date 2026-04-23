@@ -13,10 +13,9 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "user",
-            content: `Explain ${topic} like a friendly human tutor 😊
+            content: `Explain ${topic} in a fun, simple and engaging way 😊
 
-Use emojis and make it interesting.
-Avoid boring explanation.`
+Use emojis, examples and avoid boring explanation.`
           }
         ]
       })
