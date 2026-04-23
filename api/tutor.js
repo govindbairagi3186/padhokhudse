@@ -13,9 +13,12 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "user",
-            content: `Explain ${topic} in a fun, simple and engaging way 😊
+            content: `Explain ${topic} clearly like ChatGPT.
 
-Use emojis, examples and avoid boring explanation.`
+- Use headings if needed
+- Use bullets if needed
+- Keep it structured naturally (not fixed format)
+- Make it easy and interesting`
           }
         ]
       })
