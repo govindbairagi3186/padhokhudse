@@ -1,51 +1,70 @@
 let user = "";
 let currentTopic = "";
+let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
 let quizData = [];
+let quizResults = JSON.parse(localStorage.getItem("quizResults")) || [];
 
-// THEME
+/* ---------------- THEME ---------------- */
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
 }
 
-// NAV
+/* ---------------- NAV ---------------- */
 function showLogin(){
   document.getElementById("landing").style.display="none";
   document.getElementById("loginPage").style.display="flex";
 }
 
 function login(){
-  user = document.getElementById("username").value;
+  user = document.getElementById("username").value || "User";
   document.getElementById("loginPage").style.display="none";
   document.getElementById("app").style.display="flex";
-  addMessage("ai", `👋 Welcome ${user}! Ask me anything.`);
+  renderChat();
+  addMessage("ai", `👋 Welcome ${user}! Ask any topic.`);
 }
 
-function newChat(){
-  document.getElementById("chatBox").innerHTML = "";
+/* ---------------- CHAT STORAGE ---------------- */
+function saveChat(){
+  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
 }
 
-// CHAT SYSTEM
 function addMessage(type, text){
-  const div = document.createElement("div");
-  div.className = `p-3 rounded ${type === "user" ? "chat-user ml-auto w-fit" : "chat-ai w-fit"}`;
-  div.innerHTML = text;
-  document.getElementById("chatBox").appendChild(div);
-  scrollBottom();
+  const msg = { type, text, time: new Date().toLocaleTimeString() };
+  chatHistory.push(msg);
+  saveChat();
+  renderChat();
 }
 
-function scrollBottom(){
-  document.getElementById("chatBox").scrollTop =
-  document.getElementById("chatBox").scrollHeight;
+function renderChat(){
+  const box = document.getElementById("chatBox");
+  box.innerHTML = "";
+
+  chatHistory.forEach(m=>{
+    const div = document.createElement("div");
+    div.className = `p-3 rounded max-w-[80%] ${
+      m.type === "user"
+        ? "ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+        : "bg-gray-200 dark:bg-[#1e293b]"
+    }`;
+
+    div.innerHTML = `
+      <div>${m.text}</div>
+      <div class="text-xs opacity-60 mt-1">${m.time}</div>
+    `;
+    box.appendChild(div);
+  });
+
+  box.scrollTop = box.scrollHeight;
 }
 
-// THINKING ANIMATION
+/* ---------------- THINKING ---------------- */
 function showThinking(){
+  const box = document.getElementById("chatBox");
   const div = document.createElement("div");
   div.id = "thinking";
-  div.className = "chat-ai p-3 rounded w-fit";
-  div.innerHTML = "🧠 AI is thinking<span class='typing'>...</span>";
-  document.getElementById("chatBox").appendChild(div);
-  scrollBottom();
+  div.className = "p-3 bg-gray-300 dark:bg-[#334155] rounded w-fit";
+  div.innerHTML = "🧠 Thinking...";
+  box.appendChild(div);
 }
 
 function removeThinking(){
@@ -53,7 +72,7 @@ function removeThinking(){
   if(t) t.remove();
 }
 
-// MAIN AI CHAT (RULE + SIMPLE AI)
+/* ---------------- CHAT ENGINE ---------------- */
 function learnTopic(){
   const input = document.getElementById("topic").value;
   if(!input) return;
@@ -68,77 +87,72 @@ function learnTopic(){
     removeThinking();
 
     const response = `
-      📘 <b>Topic:</b> ${input}<br><br>
+      📘 <b>${input}</b><br><br>
 
-      🔹 Definition:<br>
-      This is a basic explanation of ${input}.<br><br>
+      🔹 Concept:<br>
+      This topic explains the basics of ${input}.<br><br>
 
       🔹 Key Points:<br>
-      • Important concept 1<br>
-      • Important concept 2<br>
-      • Important concept 3<br><br>
+      • Core idea of ${input}<br>
+      • Applications<br>
+      • Importance<br><br>
 
       🔹 Example:<br>
-      Real-life example of ${input}.<br><br>
+      Real-world example of ${input}<br><br>
 
       ✅ Summary:<br>
-      ${input} is an important topic to understand.
+      ${input} is an important topic for learning.
     `;
 
     addMessage("ai", response);
-  }, 1200);
+  }, 1000);
 }
 
-// QUIZ ENGINE (FIXED)
+/* ---------------- QUIZ ENGINE ---------------- */
 function generateQuiz(){
   document.getElementById("quizBox").style.display = "block";
-  document.getElementById("quizContent").innerHTML = "";
 
-  showThinking();
+  quizData = [];
 
-  setTimeout(()=>{
-    removeThinking();
+  for(let i=1;i<=5;i++){
+    quizData.push({
+      q: `${currentTopic || "General"} Question ${i}?`,
+      options: ["Option A","Option B","Option C","Option D"],
+      ans: Math.floor(Math.random()*4)
+    });
+  }
 
-    quizData = [];
-
-    for(let i=1;i<=5;i++){
-      quizData.push({
-        q: `Sample question ${i} on ${currentTopic || "general knowledge"}?`,
-        options: ["Option A","Option B","Option C","Option D"],
-        ans: 0
-      });
-    }
-
-    renderQuiz();
-  },1000);
+  renderQuiz();
 }
 
-// RENDER QUIZ
 function renderQuiz(){
-  let html = "";
+  const box = document.getElementById("quizContent");
+  box.innerHTML = "";
 
-  quizData.forEach((q, index)=>{
-    html += `
-      <div class="glass p-4 mb-4">
-        <p class="font-bold">${index+1}. ${q.q}</p>
-        ${q.options.map((o,i)=>`
-          <label class="block mt-2">
-            <input type="radio" name="q${index}" value="${i}">
-            ${o}
-          </label>
-        `).join("")}
-      </div>
+  quizData.forEach((q,i)=>{
+    const div = document.createElement("div");
+    div.className = "glass p-4 mb-4";
+
+    div.innerHTML = `
+      <p class="font-bold">${i+1}. ${q.q}</p>
+      ${q.options.map((o,idx)=>`
+        <label class="block mt-2">
+          <input type="radio" name="q${i}" value="${idx}">
+          ${o}
+        </label>
+      `).join("")}
     `;
+
+    box.appendChild(div);
   });
 
-  html += `<button onclick="submitQuiz()" class="bg-green-500 text-white px-4 py-2 rounded">
-    Submit Quiz
-  </button>`;
-
-  document.getElementById("quizContent").innerHTML = html;
+  box.innerHTML += `
+    <button onclick="submitQuiz()" class="bg-green-500 text-white px-4 py-2 rounded">
+      Submit Quiz
+    </button>
+  `;
 }
 
-// QUIZ RESULT
 function submitQuiz(){
   let score = 0;
 
@@ -149,9 +163,58 @@ function submitQuiz(){
     }
   });
 
+  const result = {
+    topic: currentTopic,
+    score,
+    total: quizData.length,
+    time: new Date().toLocaleString()
+  };
+
+  quizResults.push(result);
+  localStorage.setItem("quizResults", JSON.stringify(quizResults));
+
   document.getElementById("quizContent").innerHTML = `
     <div class="text-xl font-bold">
-      🎯 Your Score: ${score}/5
+      🎯 Score: ${score}/5
     </div>
   `;
+}
+
+/* ---------------- DASHBOARD (FIXED) ---------------- */
+function showDashboard(){
+  const box = document.getElementById("chatBox");
+
+  let html = `
+    <div class="p-4">
+      <h2 class="text-2xl font-bold mb-4">📊 Dashboard</h2>
+
+      <h3 class="font-bold mb-2">📝 Quiz History</h3>
+  `;
+
+  quizResults.slice().reverse().forEach(q=>{
+    html += `
+      <div class="glass p-3 mb-2">
+        Topic: ${q.topic}<br>
+        Score: ${q.score}/${q.total}<br>
+        Time: ${q.time}
+      </div>
+    `;
+  });
+
+  html += `
+      <h3 class="font-bold mt-4 mb-2">💬 Chat Count</h3>
+      <div class="glass p-3">
+        Total Messages: ${chatHistory.length}
+      </div>
+    </div>
+  `;
+
+  box.innerHTML = html;
+}
+
+/* ---------------- CHAT RESET ---------------- */
+function newChat(){
+  chatHistory = [];
+  saveChat();
+  renderChat();
 }
