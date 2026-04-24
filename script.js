@@ -1,12 +1,13 @@
 let username = localStorage.getItem("username") || "";
+let isLoading = false;
 
-// 🎯 RANDOM MOTIVATION
+// 🎯 MOTIVATION
 const lines = [
-  "💡 Great things take time, keep learning!",
-  "🚀 You are building your future today!",
-  "🔥 Consistency beats talent every time!",
-  "📚 Small steps lead to big success!",
-  "🌟 Keep going, you're doing amazing!"
+  "💡 Keep learning, you're growing!",
+  "🚀 Your future is built today!",
+  "🔥 Stay consistent!",
+  "📚 Knowledge is power!",
+  "🌟 You can do it!"
 ];
 
 // 🚀 START
@@ -14,7 +15,6 @@ function startApp(){
   landing.style.display="none";
   loaderPage.style.display="flex";
 
-  // random line
   motivation.innerText = lines[Math.floor(Math.random()*lines.length)];
 
   setTimeout(()=>{
@@ -26,8 +26,8 @@ function startApp(){
       localStorage.setItem("username", username);
     }
 
-    newChat(); // start fresh chat
-  },1500);
+    newChat();
+  },1200);
 }
 
 // 💬 NEW CHAT
@@ -59,7 +59,7 @@ function stream(el,text){
   function run(){
     if(i<text.length){
       el.innerHTML=text.slice(0,i);
-      i+=25; // 🚀 VERY FAST
+      i+=25;
       requestAnimationFrame(run);
     } else {
       el.innerHTML=text;
@@ -95,54 +95,84 @@ function scrollBottom(){
   },50);
 }
 
-// 🤖 AI CALL
+// 🤖 AI CALL (FIXED)
 async function learnTopic(){
+  if(isLoading) return;
+  isLoading = true;
+
   const text=topic.value;
-  if(!text) return;
+  if(!text){
+    isLoading=false;
+    return;
+  }
 
   addUser(text);
   topic.value="";
 
   const t=thinking();
 
-  const res=await fetch("/api/tutor",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      topic:text,
-      mode:document.getElementById("mode").value
-    })
-  });
+  try{
+    const res=await fetch("/api/tutor",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        topic:text,
+        mode:document.getElementById("mode").value
+      })
+    });
 
-  const data=await res.json();
-  t.remove();
-  addAI(data.result);
+    const data=await res.json();
+    t.remove();
+
+    addAI(data.result || "⚠️ No response");
+
+  }catch{
+    t.remove();
+    addAI("❌ Server error, try again");
+  }
+
+  isLoading=false;
 }
 
-// 📝 QUIZ
+// 📝 QUIZ (FIXED)
 async function generateQuiz(){
+  if(isLoading) return;
+  isLoading=true;
+
   const text=topic.value;
-  if(!text) return alert("Enter topic");
+  if(!text){
+    alert("Enter topic");
+    isLoading=false;
+    return;
+  }
 
   const t=thinking("🧠 AI is making quiz...");
 
-  const res=await fetch("/api/tutor",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({topic:text+" quiz"})
-  });
+  try{
+    const res=await fetch("/api/tutor",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({topic:text+" quiz"})
+    });
 
-  const data=await res.json();
-  t.remove();
+    const data=await res.json();
+    t.remove();
 
-  const quiz=JSON.parse(data.result.replace(/```json|```/g,""));
-  renderQuiz(quiz);
+    const quiz=JSON.parse(data.result.replace(/```json|```/g,""));
+    renderQuiz(quiz);
+
+  }catch{
+    t.remove();
+    addAI("❌ Quiz failed");
+  }
+
+  isLoading=false;
 }
 
 // 🎯 QUIZ UI
 function renderQuiz(qs){
   const box=document.createElement("div");
-  box.className="chat-ai p-4 rounded fade";
+  box.className="chat-ai p-4 rounded";
 
   let score=0;
 
@@ -153,7 +183,7 @@ function renderQuiz(qs){
     q.options.forEach((o,idx)=>{
       const b=document.createElement("button");
       b.innerText=o;
-      b.className="block w-full mt-2 border p-2 rounded hover:bg-gray-700";
+      b.className="block w-full mt-2 border p-2 rounded";
 
       b.onclick=()=>{
         d.querySelectorAll("button").forEach(x=>x.disabled=true);
