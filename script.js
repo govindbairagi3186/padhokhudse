@@ -1,220 +1,242 @@
-let user = "";
-let currentTopic = "";
-let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-let quizData = [];
-let quizResults = JSON.parse(localStorage.getItem("quizResults")) || [];
+let progress = { quizzes: 0, correct: 0 };
 
-/* ---------------- THEME ---------------- */
+// 🌙 THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
+  themeBtn.innerText =
+    document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
 }
+toggleTheme();
 
-/* ---------------- NAV ---------------- */
+// ⌨️ FRONT PAGE TYPING
+const typingMsg = "Learn smarter with AI • Quiz • Progress • Fast Learning 🚀";
+let ti = 0;
+function typeEffect(){
+  if(ti < typingMsg.length){
+    typingText.innerHTML += typingMsg[ti];
+    ti++;
+    setTimeout(typeEffect, 35);
+  }
+}
+typeEffect();
+
+// 🚀 NAVIGATION
 function showLogin(){
-  document.getElementById("landing").style.display="none";
-  document.getElementById("loginPage").style.display="flex";
+  landing.style.display = "none";
+  loginPage.style.display = "flex";
 }
 
 function login(){
-  user = document.getElementById("username").value || "User";
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="flex";
-  renderChat();
-  addMessage("ai", `👋 Welcome ${user}! Ask any topic.`);
+  const name = username.value;
+  if(!name) return;
+
+  loginPage.style.display = "none";
+  app.style.display = "flex";
+
+  addAI(`Hey ${name}! 👋 Welcome to PADHOKHUDSE 🇮🇳❤️`);
 }
 
-/* ---------------- CHAT STORAGE ---------------- */
-function saveChat(){
-  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+// 💬 CHAT SYSTEM
+function newChat(){
+  chatBox.innerHTML = "";
 }
 
-function addMessage(type, text){
-  const msg = { type, text, time: new Date().toLocaleTimeString() };
-  chatHistory.push(msg);
-  saveChat();
-  renderChat();
-}
-
-function renderChat(){
-  const box = document.getElementById("chatBox");
-  box.innerHTML = "";
-
-  chatHistory.forEach(m=>{
-    const div = document.createElement("div");
-    div.className = `p-3 rounded max-w-[80%] ${
-      m.type === "user"
-        ? "ml-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-        : "bg-gray-200 dark:bg-[#1e293b]"
-    }`;
-
-    div.innerHTML = `
-      <div>${m.text}</div>
-      <div class="text-xs opacity-60 mt-1">${m.time}</div>
-    `;
-    box.appendChild(div);
-  });
-
-  box.scrollTop = box.scrollHeight;
-}
-
-/* ---------------- THINKING ---------------- */
-function showThinking(){
-  const box = document.getElementById("chatBox");
+function addUser(text){
   const div = document.createElement("div");
-  div.id = "thinking";
-  div.className = "p-3 bg-gray-300 dark:bg-[#334155] rounded w-fit";
-  div.innerHTML = "🧠 Thinking...";
-  box.appendChild(div);
+  div.className = "chat-user ml-auto p-3 rounded max-w-xl";
+  div.innerText = text;
+  chatBox.appendChild(div);
+  scrollBottom();
 }
 
-function removeThinking(){
-  const t = document.getElementById("thinking");
-  if(t) t.remove();
+function addAI(text){
+  const div = document.createElement("div");
+  div.className = "chat-ai p-3 rounded max-w-xl";
+  chatBox.appendChild(div);
+
+  stream(div, format(text));
+  scrollBottom();
 }
 
-/* ---------------- CHAT ENGINE ---------------- */
-function learnTopic(){
-  const input = document.getElementById("topic").value;
-  if(!input) return;
-
-  currentTopic = input;
-  addMessage("user", input);
-
-  document.getElementById("topic").value = "";
-  showThinking();
-
-  setTimeout(()=>{
-    removeThinking();
-
-    const response = `
-      📘 <b>${input}</b><br><br>
-
-      🔹 Concept:<br>
-      This topic explains the basics of ${input}.<br><br>
-
-      🔹 Key Points:<br>
-      • Core idea of ${input}<br>
-      • Applications<br>
-      • Importance<br><br>
-
-      🔹 Example:<br>
-      Real-world example of ${input}<br><br>
-
-      ✅ Summary:<br>
-      ${input} is an important topic for learning.
-    `;
-
-    addMessage("ai", response);
-  }, 1000);
+// ⚡ STREAMING EFFECT
+function stream(el, text){
+  let i = 0;
+  function run(){
+    if(i < text.length){
+      el.innerHTML = text.slice(0, i);
+      i += 6;
+      setTimeout(run, 5);
+    } else {
+      el.innerHTML = text;
+    }
+  }
+  run();
 }
 
-/* ---------------- QUIZ ENGINE ---------------- */
-function generateQuiz(){
-  document.getElementById("quizBox").style.display = "block";
+// 🧠 FORMAT OUTPUT (BREAKDOWN FIX)
+function format(text){
+  return text
+    .replace(/## (.*)/g, "<h2 class='text-lg font-bold mt-3'>$1</h2>")
+    .replace(/- (.*)/g, "<li>$1</li>")
+    .replace(/\n/g, "<br>");
+}
 
-  quizData = [];
+// ⬇️ SCROLL
+function scrollBottom(){
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-  for(let i=1;i<=5;i++){
-    quizData.push({
-      q: `${currentTopic || "General"} Question ${i}?`,
-      options: ["Option A","Option B","Option C","Option D"],
-      ans: Math.floor(Math.random()*4)
+// 🤖 AI CHAT
+async function learnTopic(){
+  const text = topic.value;
+  if(!text) return;
+
+  addUser(text);
+  topic.value = "";
+
+  const thinking = document.createElement("div");
+  thinking.className = "chat-ai p-3 rounded";
+  thinking.innerText = "⚡ Thinking...";
+  chatBox.appendChild(thinking);
+
+  try{
+    const res = await fetch("/api/tutor",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ topic: text })
     });
+
+    const data = await res.json();
+
+    thinking.innerHTML = "";
+    stream(thinking, format(data.result));
+
+  }catch(err){
+    thinking.innerHTML = "❌ Error loading response";
   }
 
-  renderQuiz();
+  scrollBottom();
 }
 
-function renderQuiz(){
-  const box = document.getElementById("quizContent");
-  box.innerHTML = "";
+// 📝 QUIZ SYSTEM (HYBRID FIXED)
+async function generateQuiz(){
+  const text = topic.value;
+  if(!text) return alert("Enter topic first");
 
-  quizData.forEach((q,i)=>{
-    const div = document.createElement("div");
-    div.className = "glass p-4 mb-4";
+  addAI("📝 Creating quiz...");
 
-    div.innerHTML = `
-      <p class="font-bold">${i+1}. ${q.q}</p>
-      ${q.options.map((o,idx)=>`
-        <label class="block mt-2">
-          <input type="radio" name="q${i}" value="${idx}">
-          ${o}
-        </label>
-      `).join("")}
-    `;
+  let quiz;
 
-    box.appendChild(div);
-  });
+  try{
+    const res = await fetch("/api/tutor",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ topic: text + " quiz" })
+    });
 
-  box.innerHTML += `
-    <button onclick="submitQuiz()" class="bg-green-500 text-white px-4 py-2 rounded">
-      Submit Quiz
-    </button>
-  `;
+    const data = await res.json();
+
+    let clean = data.result
+      .replace(/```json/g,"")
+      .replace(/```/g,"")
+      .trim();
+
+    quiz = JSON.parse(clean);
+
+  } catch(e){
+    console.log("⚠️ Using fallback quiz");
+    quiz = fallbackQuiz(text);
+  }
+
+  if(!Array.isArray(quiz)){
+    quiz = fallbackQuiz(text);
+  }
+
+  while(quiz.length < 5){
+    quiz.push(randomQ(text));
+  }
+
+  renderQuiz(quiz);
 }
 
-function submitQuiz(){
+// 🛡️ FALLBACK QUIZ
+function fallbackQuiz(topic){
+  return Array.from({length:5}, () => randomQ(topic));
+}
+
+function randomQ(topic){
+  return {
+    question: `Basic concept of ${topic}?`,
+    options: [
+      "Option A",
+      "Option B",
+      "Option C",
+      "Option D"
+    ],
+    answer: Math.floor(Math.random()*4)
+  };
+}
+
+// 🎯 RENDER QUIZ UI
+function renderQuiz(quiz){
+  const container = document.createElement("div");
+  container.className = "chat-ai p-4 rounded";
+
   let score = 0;
 
-  quizData.forEach((q,i)=>{
-    const selected = document.querySelector(`input[name="q${i}"]:checked`);
-    if(selected && parseInt(selected.value) === q.ans){
-      score++;
-    }
+  quiz.forEach((q, i)=>{
+    const qDiv = document.createElement("div");
+    qDiv.className = "mb-4";
+
+    qDiv.innerHTML = `<b>Q${i+1}. ${q.question}</b>`;
+
+    q.options.forEach((opt, idx)=>{
+      const btn = document.createElement("button");
+      btn.innerText = opt;
+      btn.className = "block w-full mt-2 p-2 border rounded hover:bg-gray-200 dark:hover:bg-gray-700";
+
+      btn.onclick = ()=>{
+        qDiv.querySelectorAll("button").forEach(b => b.disabled = true);
+
+        if(idx === q.answer){
+          btn.style.background = "green";
+          btn.innerText += " ✅";
+          score++;
+        } else {
+          btn.style.background = "red";
+          btn.innerText += " ❌";
+        }
+      };
+
+      qDiv.appendChild(btn);
+    });
+
+    container.appendChild(qDiv);
   });
 
-  const result = {
-    topic: currentTopic,
-    score,
-    total: quizData.length,
-    time: new Date().toLocaleString()
+  const submit = document.createElement("button");
+  submit.innerText = "Submit Quiz";
+  submit.className = "mt-4 bg-blue-500 text-white px-4 py-2 rounded";
+
+  submit.onclick = ()=>{
+    progress.quizzes++;
+    progress.correct += score;
+
+    addAI(`🎯 Your Score: ${score}/${quiz.length}`);
   };
 
-  quizResults.push(result);
-  localStorage.setItem("quizResults", JSON.stringify(quizResults));
+  container.appendChild(submit);
+  chatBox.appendChild(container);
 
-  document.getElementById("quizContent").innerHTML = `
-    <div class="text-xl font-bold">
-      🎯 Score: ${score}/5
-    </div>
-  `;
+  scrollBottom();
 }
 
-/* ---------------- DASHBOARD (FIXED) ---------------- */
+// 📊 DASHBOARD
 function showDashboard(){
-  const box = document.getElementById("chatBox");
+  addAI(`📊 Progress Report
 
-  let html = `
-    <div class="p-4">
-      <h2 class="text-2xl font-bold mb-4">📊 Dashboard</h2>
+📝 Quizzes Attempted: ${progress.quizzes}
+✅ Correct Answers: ${progress.correct}
 
-      <h3 class="font-bold mb-2">📝 Quiz History</h3>
-  `;
-
-  quizResults.slice().reverse().forEach(q=>{
-    html += `
-      <div class="glass p-3 mb-2">
-        Topic: ${q.topic}<br>
-        Score: ${q.score}/${q.total}<br>
-        Time: ${q.time}
-      </div>
-    `;
-  });
-
-  html += `
-      <h3 class="font-bold mt-4 mb-2">💬 Chat Count</h3>
-      <div class="glass p-3">
-        Total Messages: ${chatHistory.length}
-      </div>
-    </div>
-  `;
-
-  box.innerHTML = html;
-}
-
-/* ---------------- CHAT RESET ---------------- */
-function newChat(){
-  chatHistory = [];
-  saveChat();
-  renderChat();
+Keep learning 🚀`);
 }
