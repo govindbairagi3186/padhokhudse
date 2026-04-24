@@ -6,29 +6,51 @@ export default async function handler(req, res) {
 
     const { topic, mode } = body;
 
-    const prompt = topic.includes("quiz")
-      ? `Create 5 MCQs on "${topic}". 
-Return ONLY JSON like this:
+    // 🧠 SMART PROMPT
+    let prompt = "";
+
+    if (topic.toLowerCase().includes("quiz")) {
+      prompt = `Create 5 MCQs on "${topic}".
+Return ONLY JSON like:
 [
  { "question": "...", "options": ["A","B","C","D"], "answer": 0 }
-]`
-      : `Explain "${topic}" in a ${mode === "long" ? "detailed" : "short"} way.
+]`;
+    } else {
+      prompt = `
+You are a smart AI assistant like ChatGPT.
 
-Use this format:
+User asked: "${topic}"
 
-## Overview
-Simple explanation
+👉 First understand the type:
+- If coding → give code + explanation
+- If math → solve step-by-step
+- If theory → explain clearly
+- If general → respond like helpful assistant
 
-## Key Points
-- point 1
-- point 2
-- point 3
+👉 Response style:
+- Use emojis where useful
+- Be engaging (not boring)
+- Use headings
 
-## Example
-Give a simple example
+👉 Depth:
+${mode === "long" ? "Give detailed explanation with examples and tips." : "Keep it short but clear."}
 
-## Summary
-Short conclusion`;
+👉 Format (only if topic is educational):
+## 🚀 Overview
+## 📌 Key Points
+## 💡 Example
+## 🧠 Extra Insight
+## 🎯 Summary
+
+👉 If it's not educational:
+Respond naturally like ChatGPT (no strict format)
+
+👉 Always:
+- Be helpful
+- Be clear
+- Be slightly conversational
+`;
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -37,7 +59,7 @@ Short conclusion`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo", // ✅ WORKING MODEL
+        model: "openai/gpt-3.5-turbo",
         messages: [
           { role: "user", content: prompt }
         ]
@@ -46,7 +68,6 @@ Short conclusion`;
 
     const data = await response.json();
 
-    // 🔴 DEBUG LOG (IMPORTANT)
     console.log("API RESPONSE:", data);
 
     if (!data.choices) {
