@@ -17,12 +17,13 @@
     }
 
     .chat-ai {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
+      background: #1e293b;
+      color: #e2e8f0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
-    .fade-in {
-      animation: fade 0.4s ease;
+    .fade {
+      animation: fade 0.3s ease;
     }
 
     @keyframes fade {
@@ -31,7 +32,7 @@
     }
 
     .cursor::after {
-      content: "|";
+      content:"|";
       animation: blink 1s infinite;
     }
 
@@ -41,80 +42,36 @@
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-white to-gray-100 dark:from-[#020617] dark:to-[#0f172a] text-black dark:text-gray-200">
+<body class="bg-[#020617] text-gray-200">
 
-<!-- THEME -->
-<button onclick="toggleTheme()"
-class="fixed top-4 right-4 px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded">
-🌙
-</button>
+<button onclick="toggleTheme()" class="fixed top-4 right-4">🌙</button>
 
 <!-- FRONT -->
 <div id="landing" class="h-screen flex flex-col justify-center items-center text-center">
-
-  <h1 class="text-5xl font-bold text-blue-500 mb-4">
-    PADHOKHUDSE 🇮🇳❤️
-  </h1>
-
-  <p class="text-gray-500 mb-6">
-    Learn smarter with AI 🚀
-  </p>
-
-  <button onclick="startApp()" 
-  class="bg-blue-500 text-white px-6 py-3 rounded hover:scale-105 transition">
+  <h1 class="text-5xl text-blue-500 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
+  <button onclick="startApp()" class="bg-blue-500 px-6 py-3 rounded">
     🚀 Start Learning
   </button>
-
-  <p class="absolute bottom-4 text-sm text-gray-500">
-    Made with ❤️ in 🇮🇳 by GOVIND VAISHNAV 💗
-  </p>
 </div>
 
 <!-- LOADER -->
-<div id="loaderPage" style="display:none;"
-class="h-screen flex flex-col justify-center items-center text-center">
-
-  <h1 class="text-3xl mb-4">📚 PADHOKHUDSE</h1>
-
-  <p class="animate-pulse mb-3">
-    Get ready to learn something amazing 🚀
-  </p>
-
-  <p class="text-sm text-gray-500">
-    Believe in yourself. You are building your future 💡
-  </p>
-
-  <p class="mt-6 text-xs text-gray-500">
-    By Govind Vaishnav 💗
-  </p>
-
+<div id="loaderPage" style="display:none;" class="h-screen flex flex-col justify-center items-center text-center">
+  <h1 class="text-2xl mb-4">📚 PADHOKHUDSE</h1>
+  <p class="animate-pulse">Get ready 🚀</p>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;" class="flex h-screen">
 
 <!-- SIDEBAR -->
-<div class="w-64 bg-gray-100 dark:bg-[#020617] p-3 flex flex-col">
+<div class="w-64 bg-[#020617] p-3">
+  <button onclick="generateQuiz()" class="bg-green-500 w-full p-2 mb-2 rounded">📝 Quiz</button>
+  <button onclick="showDashboard()" class="bg-purple-500 w-full p-2 mb-2 rounded">📊 Dashboard</button>
 
-  <button onclick="newChat()" class="bg-blue-500 text-white p-2 rounded mb-2">
-    💬 New Chat
-  </button>
-
-  <button onclick="generateQuiz()" class="bg-green-500 text-white p-2 rounded mb-2">
-    📝 Quiz
-  </button>
-
-  <button onclick="showDashboard()" class="bg-purple-500 text-white p-2 rounded mb-2">
-    📊 Dashboard
-  </button>
-
-  <select id="mode" class="mt-2 p-2 rounded">
+  <select id="mode" class="w-full p-2 rounded text-black">
     <option value="short">Short</option>
     <option value="long">Detailed</option>
   </select>
-
-  <div id="history" class="mt-4 text-sm overflow-y-auto"></div>
-
 </div>
 
 <!-- MAIN -->
@@ -122,19 +79,14 @@ class="h-screen flex flex-col justify-center items-center text-center">
 
   <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-  <div class="p-4 flex gap-2 border-t">
-    <input id="topic" class="flex-1 p-3 rounded border"
-      placeholder="Ask anything...">
-
-    <button onclick="learnTopic()"
-      class="bg-blue-500 text-white px-4 rounded">
-      Send
-    </button>
+  <div class="p-4 flex gap-2 border-t border-gray-700">
+    <input id="topic" class="flex-1 p-3 rounded text-black" placeholder="Ask anything...">
+    <button onclick="learnTopic()" class="bg-blue-500 px-4 rounded">Send</button>
   </div>
 
 </div>
 </div>
 
-<script src="./script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
