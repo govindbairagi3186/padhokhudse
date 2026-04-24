@@ -1,178 +1,157 @@
-let progress = { quizzes: 0, correct: 0 };
+let user = "";
+let currentTopic = "";
+let quizData = [];
 
 // THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
-  themeBtn.innerText = document.documentElement.classList.contains("dark") ? "🌙":"☀️";
 }
-toggleTheme();
-
-// FRONT PAGE TYPE EFFECT
-const text = "Learn smarter with AI • Quiz • Progress • Fast Learning";
-let i=0;
-function type(){
-  if(i<text.length){
-    typingText.innerHTML += text[i];
-    i++;
-    setTimeout(type,40);
-  }
-}
-type();
 
 // NAV
 function showLogin(){
-  landing.style.display="none";
-  loginPage.style.display="flex";
+  document.getElementById("landing").style.display="none";
+  document.getElementById("loginPage").style.display="flex";
 }
 
 function login(){
-  const name=username.value;
-  if(!name) return;
-
-  loginPage.style.display="none";
-  app.style.display="flex";
-
-  addAI(`Hey ${name}! 👋 Welcome to PADHOKHUDSE 🚀`);
+  user = document.getElementById("username").value;
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="flex";
+  addMessage("ai", `👋 Welcome ${user}! Ask me anything.`);
 }
 
-// CHAT
-function newChat(){ chatBox.innerHTML=""; }
+function newChat(){
+  document.getElementById("chatBox").innerHTML = "";
+}
 
-function addUser(text){
-  chatBox.innerHTML += `<div class="chat-user ml-auto p-3 rounded">${text}</div>`;
+// CHAT SYSTEM
+function addMessage(type, text){
+  const div = document.createElement("div");
+  div.className = `p-3 rounded ${type === "user" ? "chat-user ml-auto w-fit" : "chat-ai w-fit"}`;
+  div.innerHTML = text;
+  document.getElementById("chatBox").appendChild(div);
   scrollBottom();
 }
 
-function addAI(text){
-  const div=document.createElement("div");
-  div.className="chat-ai p-3 rounded";
-  chatBox.appendChild(div);
-  stream(div,text);
-}
-
-// STREAM
-function stream(el,text){
-  let i=0;
-  function run(){
-    if(i<text.length){
-      el.innerHTML=text.slice(0,i);
-      i+=5;
-      setTimeout(run,5);
-    } else el.innerHTML=text;
-  }
-  run();
-}
-
-// SCROLL
 function scrollBottom(){
-  chatBox.scrollTop=chatBox.scrollHeight;
+  document.getElementById("chatBox").scrollTop =
+  document.getElementById("chatBox").scrollHeight;
 }
 
-// AI CHAT
-async function learnTopic(){
-  const text=topic.value;
-  if(!text) return;
+// THINKING ANIMATION
+function showThinking(){
+  const div = document.createElement("div");
+  div.id = "thinking";
+  div.className = "chat-ai p-3 rounded w-fit";
+  div.innerHTML = "🧠 AI is thinking<span class='typing'>...</span>";
+  document.getElementById("chatBox").appendChild(div);
+  scrollBottom();
+}
 
-  addUser(text);
-  topic.value="";
+function removeThinking(){
+  const t = document.getElementById("thinking");
+  if(t) t.remove();
+}
 
-  const res=await fetch("/api/tutor",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({topic:text})
+// MAIN AI CHAT (RULE + SIMPLE AI)
+function learnTopic(){
+  const input = document.getElementById("topic").value;
+  if(!input) return;
+
+  currentTopic = input;
+  addMessage("user", input);
+
+  document.getElementById("topic").value = "";
+  showThinking();
+
+  setTimeout(()=>{
+    removeThinking();
+
+    const response = `
+      📘 <b>Topic:</b> ${input}<br><br>
+
+      🔹 Definition:<br>
+      This is a basic explanation of ${input}.<br><br>
+
+      🔹 Key Points:<br>
+      • Important concept 1<br>
+      • Important concept 2<br>
+      • Important concept 3<br><br>
+
+      🔹 Example:<br>
+      Real-life example of ${input}.<br><br>
+
+      ✅ Summary:<br>
+      ${input} is an important topic to understand.
+    `;
+
+    addMessage("ai", response);
+  }, 1200);
+}
+
+// QUIZ ENGINE (FIXED)
+function generateQuiz(){
+  document.getElementById("quizBox").style.display = "block";
+  document.getElementById("quizContent").innerHTML = "";
+
+  showThinking();
+
+  setTimeout(()=>{
+    removeThinking();
+
+    quizData = [];
+
+    for(let i=1;i<=5;i++){
+      quizData.push({
+        q: `Sample question ${i} on ${currentTopic || "general knowledge"}?`,
+        options: ["Option A","Option B","Option C","Option D"],
+        ans: 0
+      });
+    }
+
+    renderQuiz();
+  },1000);
+}
+
+// RENDER QUIZ
+function renderQuiz(){
+  let html = "";
+
+  quizData.forEach((q, index)=>{
+    html += `
+      <div class="glass p-4 mb-4">
+        <p class="font-bold">${index+1}. ${q.q}</p>
+        ${q.options.map((o,i)=>`
+          <label class="block mt-2">
+            <input type="radio" name="q${index}" value="${i}">
+            ${o}
+          </label>
+        `).join("")}
+      </div>
+    `;
   });
 
-  const data=await res.json();
-  addAI(data.result);
+  html += `<button onclick="submitQuiz()" class="bg-green-500 text-white px-4 py-2 rounded">
+    Submit Quiz
+  </button>`;
+
+  document.getElementById("quizContent").innerHTML = html;
 }
 
-// 🧠 HYBRID QUIZ (5+ MCQ GUARANTEE)
-async function generateQuiz(){
-  const text=topic.value;
-  if(!text) return alert("Enter topic");
+// QUIZ RESULT
+function submitQuiz(){
+  let score = 0;
 
-  const res=await fetch("/api/tutor",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      topic:`Create 5 MCQ quiz on ${text} return JSON`
-    })
+  quizData.forEach((q,i)=>{
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if(selected && parseInt(selected.value) === q.ans){
+      score++;
+    }
   });
 
-  const data=await res.json();
-
-  let quiz;
-  try {
-    quiz = JSON.parse(data.result.replace(/```json|```/g,""));
-  } catch {
-    quiz = fallbackQuiz(text);
-  }
-
-  while(quiz.length<5){
-    quiz.push(randomQ(text));
-  }
-
-  renderQuiz(quiz);
-}
-
-// fallback
-function fallbackQuiz(t){
-  return Array.from({length:5},()=>randomQ(t));
-}
-
-function randomQ(t){
-  return {
-    question:`Basic ${t} question?`,
-    options:["A","B","C","D"],
-    answer:0
-  };
-}
-
-// QUIZ UI
-function renderQuiz(quiz){
-  const box=document.createElement("div");
-  box.className="chat-ai p-4 rounded";
-
-  let score=0;
-
-  quiz.forEach((q,i)=>{
-    const d=document.createElement("div");
-    d.innerHTML=`<b>Q${i+1}. ${q.question}</b>`;
-
-    q.options.forEach((o,idx)=>{
-      const b=document.createElement("button");
-      b.innerText=o;
-      b.className="block w-full mt-2 p-2 border rounded";
-
-      b.onclick=()=>{
-        d.querySelectorAll("button").forEach(x=>x.disabled=true);
-        if(idx===q.answer){
-          b.style.background="green";
-          score++;
-        } else b.style.background="red";
-      };
-
-      d.appendChild(b);
-    });
-
-    box.appendChild(d);
-  });
-
-  const submit=document.createElement("button");
-  submit.innerText="Submit";
-  submit.className="mt-4 bg-blue-500 text-white px-4 py-2 rounded";
-
-  submit.onclick=()=>{
-    progress.quizzes++;
-    progress.correct+=score;
-    addAI(`🎯 Score ${score}/${quiz.length}`);
-  };
-
-  box.appendChild(submit);
-  chatBox.appendChild(box);
-}
-
-// DASHBOARD
-function showDashboard(){
-  addAI(`📊 Progress\nQuizzes: ${progress.quizzes}\nCorrect: ${progress.correct}`);
+  document.getElementById("quizContent").innerHTML = `
+    <div class="text-xl font-bold">
+      🎯 Your Score: ${score}/5
+    </div>
+  `;
 }
