@@ -1,6 +1,13 @@
+// =========================
+// GLOBAL STATE
+// =========================
 let progress = { quizzes: 0, correct: 0 };
+let user = localStorage.getItem("user") || null;
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
 
-// 🌙 THEME
+// =========================
+// THEME
+// =========================
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
   themeBtn.innerText =
@@ -8,39 +15,27 @@ function toggleTheme(){
 }
 toggleTheme();
 
-// ⌨️ FRONT PAGE TYPING
-const typingMsg = "Learn smarter with AI • Quiz • Progress • Fast Learning 🚀";
-let ti = 0;
-function typeEffect(){
-  if(ti < typingMsg.length){
-    typingText.innerHTML += typingMsg[ti];
-    ti++;
-    setTimeout(typeEffect, 35);
-  }
-}
-typeEffect();
-
-// 🚀 NAVIGATION
-function showLogin(){
-  landing.style.display = "none";
-  loginPage.style.display = "flex";
-}
-
+// =========================
+// LOGIN SYSTEM (LOCAL)
+// =========================
 function login(){
   const name = username.value;
-  if(!name) return;
+  if(!name) return alert("Enter name");
+
+  user = name;
+  localStorage.setItem("user", name);
 
   loginPage.style.display = "none";
   app.style.display = "flex";
 
-  addAI(`Hey ${name}! 👋 Welcome to PADHOKHUDSE 🇮🇳❤️`);
+  loadChats();
+
+  addAI(`Hey ${name}! 👋 Welcome back 🚀`);
 }
 
-// 💬 CHAT SYSTEM
-function newChat(){
-  chatBox.innerHTML = "";
-}
-
+// =========================
+// CHAT UI
+// =========================
 function addUser(text){
   const div = document.createElement("div");
   div.className = "chat-user ml-auto p-3 rounded max-w-xl";
@@ -55,17 +50,18 @@ function addAI(text){
   chatBox.appendChild(div);
 
   stream(div, format(text));
-  scrollBottom();
 }
 
-// ⚡ STREAMING EFFECT
+// =========================
+// FAST STREAMING
+// =========================
 function stream(el, text){
   let i = 0;
   function run(){
     if(i < text.length){
       el.innerHTML = text.slice(0, i);
-      i += 6;
-      setTimeout(run, 5);
+      i += 10; // 🔥 faster
+      setTimeout(run, 3);
     } else {
       el.innerHTML = text;
     }
@@ -73,20 +69,70 @@ function stream(el, text){
   run();
 }
 
-// 🧠 FORMAT OUTPUT (BREAKDOWN FIX)
+// =========================
+// FORMAT OUTPUT (BETTER)
+// =========================
 function format(text){
   return text
-    .replace(/## (.*)/g, "<h2 class='text-lg font-bold mt-3'>$1</h2>")
-    .replace(/- (.*)/g, "<li>$1</li>")
-    .replace(/\n/g, "<br>");
+    .replace(/## (.*)/g,"<h2 class='text-xl font-bold mt-3 text-blue-400'>$1</h2>")
+    .replace(/- (.*)/g,"<li class='ml-4'>• $1</li>")
+    .replace(/\n/g,"<br>");
 }
 
-// ⬇️ SCROLL
+// =========================
+// THINKING LOADER
+// =========================
+function showThinking(){
+  const div = document.createElement("div");
+  div.className = "chat-ai p-3 rounded animate-pulse text-gray-400";
+  div.innerText = "🤖 AI is thinking...";
+  chatBox.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+// =========================
+// SCROLL
+// =========================
 function scrollBottom(){
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// 🤖 AI CHAT
+// =========================
+// SAVE CHAT
+// =========================
+function saveChat(q,a){
+  chats.unshift({q,a});
+  localStorage.setItem("chats", JSON.stringify(chats));
+  loadChats();
+}
+
+// =========================
+// LOAD SIDEBAR HISTORY
+// =========================
+function loadChats(){
+  const sidebar = document.getElementById("history");
+  if(!sidebar) return;
+
+  sidebar.innerHTML = "";
+
+  chats.slice(0,10).forEach(c=>{
+    const btn = document.createElement("button");
+    btn.innerText = c.q.slice(0,20)+"...";
+    btn.className = "block w-full text-left p-2 hover:bg-gray-700 rounded";
+
+    btn.onclick = ()=>{
+      addUser(c.q);
+      addAI(c.a);
+    };
+
+    sidebar.appendChild(btn);
+  });
+}
+
+// =========================
+// AI CHAT
+// =========================
 async function learnTopic(){
   const text = topic.value;
   if(!text) return;
@@ -94,10 +140,7 @@ async function learnTopic(){
   addUser(text);
   topic.value = "";
 
-  const thinking = document.createElement("div");
-  thinking.className = "chat-ai p-3 rounded";
-  thinking.innerText = "⚡ Thinking...";
-  chatBox.appendChild(thinking);
+  const thinking = showThinking();
 
   try{
     const res = await fetch("/api/tutor",{
@@ -108,22 +151,24 @@ async function learnTopic(){
 
     const data = await res.json();
 
-    thinking.innerHTML = "";
-    stream(thinking, format(data.result));
+    thinking.remove();
+
+    addAI(data.result);
+    saveChat(text, data.result);
 
   }catch(err){
-    thinking.innerHTML = "❌ Error loading response";
+    thinking.innerText = "❌ Error loading";
   }
-
-  scrollBottom();
 }
 
-// 📝 QUIZ SYSTEM (HYBRID FIXED)
+// =========================
+// QUIZ (IMPROVED)
+// =========================
 async function generateQuiz(){
   const text = topic.value;
-  if(!text) return alert("Enter topic first");
+  if(!text) return alert("Enter topic");
 
-  addAI("📝 Creating quiz...");
+  const thinking = showThinking();
 
   let quiz;
 
@@ -136,107 +181,84 @@ async function generateQuiz(){
 
     const data = await res.json();
 
-    let clean = data.result
-      .replace(/```json/g,"")
-      .replace(/```/g,"")
-      .trim();
-
+    let clean = data.result.replace(/```json|```/g,"").trim();
     quiz = JSON.parse(clean);
 
-  } catch(e){
-    console.log("⚠️ Using fallback quiz");
+  } catch {
     quiz = fallbackQuiz(text);
   }
 
-  if(!Array.isArray(quiz)){
-    quiz = fallbackQuiz(text);
-  }
-
-  while(quiz.length < 5){
-    quiz.push(randomQ(text));
-  }
+  thinking.remove();
 
   renderQuiz(quiz);
 }
 
-// 🛡️ FALLBACK QUIZ
+// =========================
+// QUIZ FALLBACK
+// =========================
 function fallbackQuiz(topic){
-  return Array.from({length:5}, () => randomQ(topic));
+  return Array.from({length:5},()=>({
+    question:`Basic question of ${topic}?`,
+    options:["A","B","C","D"],
+    answer:0
+  }));
 }
 
-function randomQ(topic){
-  return {
-    question: `Basic concept of ${topic}?`,
-    options: [
-      "Option A",
-      "Option B",
-      "Option C",
-      "Option D"
-    ],
-    answer: Math.floor(Math.random()*4)
-  };
-}
-
-// 🎯 RENDER QUIZ UI
+// =========================
+// QUIZ UI
+// =========================
 function renderQuiz(quiz){
-  const container = document.createElement("div");
-  container.className = "chat-ai p-4 rounded";
+  const box = document.createElement("div");
+  box.className = "chat-ai p-4 rounded";
 
   let score = 0;
 
-  quiz.forEach((q, i)=>{
-    const qDiv = document.createElement("div");
-    qDiv.className = "mb-4";
+  quiz.forEach((q,i)=>{
+    const d = document.createElement("div");
+    d.innerHTML = `<b>Q${i+1}. ${q.question}</b>`;
 
-    qDiv.innerHTML = `<b>Q${i+1}. ${q.question}</b>`;
+    q.options.forEach((o,idx)=>{
+      const b = document.createElement("button");
+      b.innerText = o;
+      b.className = "block w-full mt-2 p-2 border rounded";
 
-    q.options.forEach((opt, idx)=>{
-      const btn = document.createElement("button");
-      btn.innerText = opt;
-      btn.className = "block w-full mt-2 p-2 border rounded hover:bg-gray-200 dark:hover:bg-gray-700";
+      b.onclick = ()=>{
+        d.querySelectorAll("button").forEach(x=>x.disabled=true);
 
-      btn.onclick = ()=>{
-        qDiv.querySelectorAll("button").forEach(b => b.disabled = true);
-
-        if(idx === q.answer){
-          btn.style.background = "green";
-          btn.innerText += " ✅";
+        if(idx===q.answer){
+          b.style.background="green";
           score++;
-        } else {
-          btn.style.background = "red";
-          btn.innerText += " ❌";
-        }
+        } else b.style.background="red";
       };
 
-      qDiv.appendChild(btn);
+      d.appendChild(b);
     });
 
-    container.appendChild(qDiv);
+    box.appendChild(d);
   });
 
   const submit = document.createElement("button");
-  submit.innerText = "Submit Quiz";
+  submit.innerText = "Submit";
   submit.className = "mt-4 bg-blue-500 text-white px-4 py-2 rounded";
 
   submit.onclick = ()=>{
     progress.quizzes++;
     progress.correct += score;
-
-    addAI(`🎯 Your Score: ${score}/${quiz.length}`);
+    addAI(`🎯 Score: ${score}/${quiz.length}`);
   };
 
-  container.appendChild(submit);
-  chatBox.appendChild(container);
-
-  scrollBottom();
+  box.appendChild(submit);
+  chatBox.appendChild(box);
 }
 
-// 📊 DASHBOARD
+// =========================
+// DASHBOARD
+// =========================
 function showDashboard(){
-  addAI(`📊 Progress Report
+  addAI(`📊 Progress
 
-📝 Quizzes Attempted: ${progress.quizzes}
-✅ Correct Answers: ${progress.correct}
+📝 Quizzes: ${progress.quizzes}
+✅ Correct: ${progress.correct}
 
 Keep learning 🚀`);
 }
