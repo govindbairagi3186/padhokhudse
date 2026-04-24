@@ -255,10 +255,41 @@ function renderQuiz(quiz){
 // DASHBOARD
 // =========================
 function showDashboard(){
-  addAI(`📊 Progress
+  const accuracy = progress.quizzes
+    ? Math.round((progress.correct / (progress.quizzes * 5)) * 100)
+    : 0;
 
-📝 Quizzes: ${progress.quizzes}
-✅ Correct: ${progress.correct}
+  const div = document.createElement("div");
+  div.className = "chat-ai p-5 rounded";
 
-Keep learning 🚀`);
+  div.innerHTML = `
+    <h2 class="text-xl font-bold mb-3">📊 Your Dashboard</h2>
+
+    <div class="grid grid-cols-2 gap-4 text-center mb-4">
+
+      <div class="p-3 bg-blue-500/20 rounded">
+        <div class="text-lg font-bold">${progress.quizzes}</div>
+        <div class="text-sm">Quizzes</div>
+      </div>
+
+      <div class="p-3 bg-green-500/20 rounded">
+        <div class="text-lg font-bold">${progress.correct}</div>
+        <div class="text-sm">Correct</div>
+      </div>
+
+    </div>
+
+    <div class="mb-2 font-semibold">🎯 Accuracy: ${accuracy}%</div>
+
+    <div class="w-full bg-gray-300 rounded h-3">
+      <div class="bg-green-500 h-3 rounded" style="width:${accuracy}%"></div>
+    </div>
+
+    <p class="mt-4 text-sm text-gray-400">
+      Keep practicing to improve 🚀
+    </p>
+  `;
+
+  chatBox.appendChild(div);
+  scrollBottom();
 }
