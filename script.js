@@ -1,234 +1,168 @@
-// =========================
-// GLOBAL STATE
-// =========================
-let progress = { quizzes: 0, correct: 0 };
-let user = localStorage.getItem("user") || null;
-let chats = JSON.parse(localStorage.getItem("chats")) || [];
-
-// =========================
-// THEME
-// =========================
+// 🌙 THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
-  themeBtn.innerText =
-    document.documentElement.classList.contains("dark") ? "🌙" : "☀️";
-}
-toggleTheme();
-
-// =========================
-// LOGIN SYSTEM (LOCAL)
-// =========================
-function login(){
-  const name = username.value;
-  if(!name) return alert("Enter name");
-
-  user = name;
-  localStorage.setItem("user", name);
-
-  loginPage.style.display = "none";
-  app.style.display = "flex";
-
-  loadChats();
-
-  addAI(`Hey ${name}! 👋 Welcome back 🚀`);
 }
 
-// =========================
-// CHAT UI
-// =========================
+// 🚀 START APP
+function startApp(){
+  document.getElementById("landing").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+}
+
+// 💬 CHAT
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
+let progress = { quizzes:0, correct:0 };
+
 function addUser(text){
-  const div = document.createElement("div");
-  div.className = "chat-user ml-auto p-3 rounded max-w-xl";
-  div.innerText = text;
+  const div=document.createElement("div");
+  div.className="chat-user ml-auto p-3 rounded max-w-xl";
+  div.innerText=text;
   chatBox.appendChild(div);
-  scrollBottom();
 }
 
 function addAI(text){
-  const div = document.createElement("div");
-  div.className = "chat-ai p-3 rounded max-w-xl";
+  const div=document.createElement("div");
+  div.className="chat-ai p-3 rounded max-w-xl";
   chatBox.appendChild(div);
-
   stream(div, format(text));
 }
 
-// =========================
-// FAST STREAMING
-// =========================
-function stream(el, text){
-  let i = 0;
+// ⚡ FAST STREAM
+function stream(el,text){
+  let i=0;
   function run(){
-    if(i < text.length){
-      el.innerHTML = text.slice(0, i);
-      i += 10; // 🔥 faster
-      setTimeout(run, 3);
-    } else {
-      el.innerHTML = text;
-    }
+    if(i<text.length){
+      el.innerHTML=text.slice(0,i);
+      i+=8;
+      setTimeout(run,3);
+    } else el.innerHTML=text;
   }
   run();
 }
 
-// =========================
-// FORMAT OUTPUT (BETTER)
-// =========================
+// 🧠 FORMAT
 function format(text){
   return text
-    .replace(/## (.*)/g,"<h2 class='text-xl font-bold mt-3 text-blue-400'>$1</h2>")
-    .replace(/- (.*)/g,"<li class='ml-4'>• $1</li>")
+    .replace(/## (.*)/g,"<h2 class='text-lg font-bold mt-3 text-blue-400'>$1</h2>")
+    .replace(/- (.*)/g,"<li>• $1</li>")
     .replace(/\n/g,"<br>");
 }
 
-// =========================
-// THINKING LOADER
-// =========================
-function showThinking(){
-  const div = document.createElement("div");
-  div.className = "chat-ai p-3 rounded animate-pulse text-gray-400";
-  div.innerText = "🤖 AI is thinking...";
-  chatBox.appendChild(div);
-  scrollBottom();
-  return div;
+// 🤖 THINKING
+function thinking(){
+  const d=document.createElement("div");
+  d.className="chat-ai p-3 animate-pulse";
+  d.innerText="🤖 AI thinking...";
+  chatBox.appendChild(d);
+  return d;
 }
 
-// =========================
-// SCROLL
-// =========================
+// 🔽 SCROLL
 function scrollBottom(){
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// =========================
-// SAVE CHAT
-// =========================
+// 💾 SAVE
 function saveChat(q,a){
   chats.unshift({q,a});
-  localStorage.setItem("chats", JSON.stringify(chats));
-  loadChats();
+  localStorage.setItem("chats",JSON.stringify(chats));
+  loadHistory();
 }
 
-// =========================
-// LOAD SIDEBAR HISTORY
-// =========================
-function loadChats(){
-  const sidebar = document.getElementById("history");
-  if(!sidebar) return;
-
-  sidebar.innerHTML = "";
-
+// 📜 HISTORY
+function loadHistory(){
+  const h=document.getElementById("history");
+  h.innerHTML="";
   chats.slice(0,10).forEach(c=>{
-    const btn = document.createElement("button");
-    btn.innerText = c.q.slice(0,20)+"...";
-    btn.className = "block w-full text-left p-2 hover:bg-gray-700 rounded";
-
-    btn.onclick = ()=>{
-      addUser(c.q);
-      addAI(c.a);
-    };
-
-    sidebar.appendChild(btn);
+    const b=document.createElement("button");
+    b.innerText=c.q.slice(0,25)+"...";
+    b.className="block w-full text-left p-2 hover:bg-gray-300 dark:hover:bg-gray-700";
+    b.onclick=()=>{addUser(c.q);addAI(c.a);}
+    h.appendChild(b);
   });
 }
 
-// =========================
-// AI CHAT
-// =========================
+// 🤖 AI
 async function learnTopic(){
-  const text = topic.value;
+  const text=topic.value;
   if(!text) return;
 
   addUser(text);
-  topic.value = "";
+  topic.value="";
 
-  const thinking = showThinking();
+  const t=thinking();
 
   try{
-    const res = await fetch("/api/tutor",{
+    const res=await fetch("/api/tutor",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ topic: text })
+      body:JSON.stringify({topic:text})
     });
 
-    const data = await res.json();
+    const data=await res.json();
 
-    thinking.remove();
-
+    t.remove();
     addAI(data.result);
-    saveChat(text, data.result);
+    saveChat(text,data.result);
 
-  }catch(err){
-    thinking.innerText = "❌ Error loading";
+  }catch{
+    t.innerText="❌ Error";
   }
+
+  scrollBottom();
 }
 
-// =========================
-// QUIZ (IMPROVED)
-// =========================
+// 📝 QUIZ
 async function generateQuiz(){
-  const text = topic.value;
+  const text=topic.value;
   if(!text) return alert("Enter topic");
 
-  const thinking = showThinking();
+  const t=thinking();
 
   let quiz;
 
   try{
-    const res = await fetch("/api/tutor",{
+    const res=await fetch("/api/tutor",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ topic: text + " quiz" })
+      body:JSON.stringify({topic:text+" quiz"})
     });
 
-    const data = await res.json();
+    const data=await res.json();
+    quiz=JSON.parse(data.result.replace(/```json|```/g,""));
 
-    let clean = data.result.replace(/```json|```/g,"").trim();
-    quiz = JSON.parse(clean);
-
-  } catch {
-    quiz = fallbackQuiz(text);
+  }catch{
+    quiz=Array.from({length:5},()=>({
+      question:"Basic question?",
+      options:["A","B","C","D"],
+      answer:0
+    }));
   }
 
-  thinking.remove();
-
+  t.remove();
   renderQuiz(quiz);
 }
 
-// =========================
-// QUIZ FALLBACK
-// =========================
-function fallbackQuiz(topic){
-  return Array.from({length:5},()=>({
-    question:`Basic question of ${topic}?`,
-    options:["A","B","C","D"],
-    answer:0
-  }));
-}
+// 🎯 QUIZ UI
+function renderQuiz(qs){
+  const box=document.createElement("div");
+  box.className="chat-ai p-4 rounded";
 
-// =========================
-// QUIZ UI
-// =========================
-function renderQuiz(quiz){
-  const box = document.createElement("div");
-  box.className = "chat-ai p-4 rounded";
+  let score=0;
 
-  let score = 0;
-
-  quiz.forEach((q,i)=>{
-    const d = document.createElement("div");
-    d.innerHTML = `<b>Q${i+1}. ${q.question}</b>`;
+  qs.forEach((q,i)=>{
+    const d=document.createElement("div");
+    d.innerHTML=`<b>Q${i+1}. ${q.question}</b>`;
 
     q.options.forEach((o,idx)=>{
-      const b = document.createElement("button");
-      b.innerText = o;
-      b.className = "block w-full mt-2 p-2 border rounded";
+      const b=document.createElement("button");
+      b.innerText=o;
+      b.className="block w-full mt-2 border p-2 rounded";
 
-      b.onclick = ()=>{
+      b.onclick=()=>{
         d.querySelectorAll("button").forEach(x=>x.disabled=true);
-
-        if(idx===q.answer){
-          b.style.background="green";
-          score++;
-        } else b.style.background="red";
+        if(idx===q.answer){b.style.background="green";score++;}
+        else b.style.background="red";
       };
 
       d.appendChild(b);
@@ -237,59 +171,37 @@ function renderQuiz(quiz){
     box.appendChild(d);
   });
 
-  const submit = document.createElement("button");
-  submit.innerText = "Submit";
-  submit.className = "mt-4 bg-blue-500 text-white px-4 py-2 rounded";
+  const submit=document.createElement("button");
+  submit.innerText="Submit";
+  submit.className="mt-4 bg-blue-500 text-white px-4 py-2 rounded";
 
-  submit.onclick = ()=>{
+  submit.onclick=()=>{
     progress.quizzes++;
-    progress.correct += score;
-    addAI(`🎯 Score: ${score}/${quiz.length}`);
+    progress.correct+=score;
+    addAI(`🎯 Score: ${score}/${qs.length}`);
   };
 
   box.appendChild(submit);
   chatBox.appendChild(box);
 }
 
-// =========================
-// DASHBOARD
-// =========================
+// 📊 DASHBOARD
 function showDashboard(){
-  const accuracy = progress.quizzes
-    ? Math.round((progress.correct / (progress.quizzes * 5)) * 100)
+  const acc = progress.quizzes
+    ? Math.round((progress.correct/(progress.quizzes*5))*100)
     : 0;
 
-  const div = document.createElement("div");
-  div.className = "chat-ai p-5 rounded";
+  addAI(`📊 Dashboard
 
-  div.innerHTML = `
-    <h2 class="text-xl font-bold mb-3">📊 Your Dashboard</h2>
-
-    <div class="grid grid-cols-2 gap-4 text-center mb-4">
-
-      <div class="p-3 bg-blue-500/20 rounded">
-        <div class="text-lg font-bold">${progress.quizzes}</div>
-        <div class="text-sm">Quizzes</div>
-      </div>
-
-      <div class="p-3 bg-green-500/20 rounded">
-        <div class="text-lg font-bold">${progress.correct}</div>
-        <div class="text-sm">Correct</div>
-      </div>
-
-    </div>
-
-    <div class="mb-2 font-semibold">🎯 Accuracy: ${accuracy}%</div>
-
-    <div class="w-full bg-gray-300 rounded h-3">
-      <div class="bg-green-500 h-3 rounded" style="width:${accuracy}%"></div>
-    </div>
-
-    <p class="mt-4 text-sm text-gray-400">
-      Keep practicing to improve 🚀
-    </p>
-  `;
-
-  chatBox.appendChild(div);
-  scrollBottom();
+📝 Quizzes: ${progress.quizzes}
+✅ Correct: ${progress.correct}
+🎯 Accuracy: ${acc}% 🚀`);
 }
+
+// 💬 NEW CHAT
+function newChat(){
+  chatBox.innerHTML="";
+}
+
+// INIT
+loadHistory();
