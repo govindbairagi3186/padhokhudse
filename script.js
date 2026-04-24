@@ -1,9 +1,21 @@
 let username = localStorage.getItem("username") || "";
 
-// START
+// 🎯 RANDOM MOTIVATION
+const lines = [
+  "💡 Great things take time, keep learning!",
+  "🚀 You are building your future today!",
+  "🔥 Consistency beats talent every time!",
+  "📚 Small steps lead to big success!",
+  "🌟 Keep going, you're doing amazing!"
+];
+
+// 🚀 START
 function startApp(){
   landing.style.display="none";
   loaderPage.style.display="flex";
+
+  // random line
+  motivation.innerText = lines[Math.floor(Math.random()*lines.length)];
 
   setTimeout(()=>{
     loaderPage.style.display="none";
@@ -14,56 +26,76 @@ function startApp(){
       localStorage.setItem("username", username);
     }
 
-    addAI(`👋 Hello ${username}! Let's learn 🚀`);
+    newChat(); // start fresh chat
   },1500);
 }
 
-// CHAT UI
+// 💬 NEW CHAT
+function newChat(){
+  chatBox.innerHTML="";
+  addAI(`👋 Hello ${username}! Ready to learn something new today? 🚀`);
+}
+
+// 👤 USER
 function addUser(text){
   const d=document.createElement("div");
   d.className="chat-user p-3 rounded ml-auto max-w-xl fade";
   d.innerText=text;
   chatBox.appendChild(d);
+  scrollBottom();
 }
 
+// 🤖 AI
 function addAI(text){
   const d=document.createElement("div");
-  d.className="chat-ai p-3 rounded max-w-xl fade cursor";
+  d.className="chat-ai p-4 rounded max-w-xl fade cursor";
   chatBox.appendChild(d);
   stream(d, format(text));
 }
 
-// FAST STREAM
+// ⚡ FAST STREAM
 function stream(el,text){
   let i=0;
   function run(){
     if(i<text.length){
       el.innerHTML=text.slice(0,i);
-      i+=12; // ⚡ SPEED BOOST
-      setTimeout(run,2);
-    } else el.classList.remove("cursor");
+      i+=25; // 🚀 VERY FAST
+      requestAnimationFrame(run);
+    } else {
+      el.innerHTML=text;
+      el.classList.remove("cursor");
+    }
   }
   run();
 }
 
-// FORMAT
+// 🎨 FORMAT
 function format(t){
   return t
     .replace(/## (.*)/g,"<h2 class='text-blue-400 font-bold mt-3'>$1</h2>")
+    .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
     .replace(/- (.*)/g,"<li>• $1</li>")
     .replace(/\n/g,"<br>");
 }
 
-// THINKING
+// 🤖 THINKING
 function thinking(msg="🤖 Thinking..."){
   const d=document.createElement("div");
   d.className="chat-ai p-3 animate-pulse";
   d.innerText=msg;
   chatBox.appendChild(d);
+  scrollBottom();
   return d;
 }
 
-// AI CALL
+// 🔽 SCROLL
+function scrollBottom(){
+  setTimeout(()=>{
+    chatBox.scrollTop = chatBox.scrollHeight;
+  },50);
+}
+
+// 🤖 AI CALL
 async function learnTopic(){
   const text=topic.value;
   if(!text) return;
@@ -73,12 +105,13 @@ async function learnTopic(){
 
   const t=thinking();
 
-  const mode=document.getElementById("mode").value;
-
   const res=await fetch("/api/tutor",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({topic:text,mode})
+    body:JSON.stringify({
+      topic:text,
+      mode:document.getElementById("mode").value
+    })
   });
 
   const data=await res.json();
@@ -86,7 +119,7 @@ async function learnTopic(){
   addAI(data.result);
 }
 
-// QUIZ
+// 📝 QUIZ
 async function generateQuiz(){
   const text=topic.value;
   if(!text) return alert("Enter topic");
@@ -106,10 +139,10 @@ async function generateQuiz(){
   renderQuiz(quiz);
 }
 
-// QUIZ UI
+// 🎯 QUIZ UI
 function renderQuiz(qs){
   const box=document.createElement("div");
-  box.className="chat-ai p-4 rounded";
+  box.className="chat-ai p-4 rounded fade";
 
   let score=0;
 
@@ -120,7 +153,7 @@ function renderQuiz(qs){
     q.options.forEach((o,idx)=>{
       const b=document.createElement("button");
       b.innerText=o;
-      b.className="block w-full mt-2 border p-2 rounded";
+      b.className="block w-full mt-2 border p-2 rounded hover:bg-gray-700";
 
       b.onclick=()=>{
         d.querySelectorAll("button").forEach(x=>x.disabled=true);
@@ -139,14 +172,14 @@ function renderQuiz(qs){
   submit.className="mt-4 bg-blue-500 px-4 py-2 rounded";
 
   submit.onclick=()=>{
-    addAI(`🎯 Score: ${score}/${qs.length}`);
+    addAI(`🎯 Score: ${score}/${qs.length} 🚀`);
   };
 
   box.appendChild(submit);
   chatBox.appendChild(box);
 }
 
-// DASHBOARD
+// 📊 DASHBOARD
 function showDashboard(){
   addAI("📊 Dashboard coming soon 🚀");
 }
