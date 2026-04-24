@@ -18,20 +18,38 @@
 
     .chat-ai {
       background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+    }
+
+    .fade-in {
+      animation: fade 0.4s ease;
+    }
+
+    @keyframes fade {
+      from {opacity:0; transform:translateY(10px);}
+      to {opacity:1; transform:translateY(0);}
+    }
+
+    .cursor::after {
+      content: "|";
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      50% {opacity:0;}
     }
   </style>
 </head>
 
-<body class="bg-white dark:bg-[#0f172a] text-black dark:text-gray-200">
+<body class="bg-gradient-to-br from-white to-gray-100 dark:from-[#020617] dark:to-[#0f172a] text-black dark:text-gray-200">
 
-<!-- 🌙 THEME -->
+<!-- THEME -->
 <button onclick="toggleTheme()"
-class="fixed top-4 right-4 px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded z-50">
+class="fixed top-4 right-4 px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded">
 🌙
 </button>
 
-<!-- 🚀 FRONT PAGE -->
+<!-- FRONT -->
 <div id="landing" class="h-screen flex flex-col justify-center items-center text-center">
 
   <h1 class="text-5xl font-bold text-blue-500 mb-4">
@@ -39,72 +57,84 @@ class="fixed top-4 right-4 px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded z-50">
   </h1>
 
   <p class="text-gray-500 mb-6">
-    Learn anything with AI, quizzes & progress 🚀
+    Learn smarter with AI 🚀
   </p>
 
   <button onclick="startApp()" 
-    class="bg-blue-500 text-white px-6 py-3 rounded hover:scale-105 transition">
+  class="bg-blue-500 text-white px-6 py-3 rounded hover:scale-105 transition">
     🚀 Start Learning
   </button>
 
   <p class="absolute bottom-4 text-sm text-gray-500">
     Made with ❤️ in 🇮🇳 by GOVIND VAISHNAV 💗
   </p>
+</div>
+
+<!-- LOADER -->
+<div id="loaderPage" style="display:none;"
+class="h-screen flex flex-col justify-center items-center text-center">
+
+  <h1 class="text-3xl mb-4">📚 PADHOKHUDSE</h1>
+
+  <p class="animate-pulse mb-3">
+    Get ready to learn something amazing 🚀
+  </p>
+
+  <p class="text-sm text-gray-500">
+    Believe in yourself. You are building your future 💡
+  </p>
+
+  <p class="mt-6 text-xs text-gray-500">
+    By Govind Vaishnav 💗
+  </p>
 
 </div>
 
-<!-- 💬 APP -->
+<!-- APP -->
 <div id="app" style="display:none;" class="flex h-screen">
 
-  <!-- SIDEBAR -->
-  <div class="w-64 bg-gray-100 dark:bg-[#020617] p-3 flex flex-col">
+<!-- SIDEBAR -->
+<div class="w-64 bg-gray-100 dark:bg-[#020617] p-3 flex flex-col">
 
-    <button onclick="newChat()" class="bg-blue-500 text-white p-2 rounded mb-2">
-      💬 New Chat
+  <button onclick="newChat()" class="bg-blue-500 text-white p-2 rounded mb-2">
+    💬 New Chat
+  </button>
+
+  <button onclick="generateQuiz()" class="bg-green-500 text-white p-2 rounded mb-2">
+    📝 Quiz
+  </button>
+
+  <button onclick="showDashboard()" class="bg-purple-500 text-white p-2 rounded mb-2">
+    📊 Dashboard
+  </button>
+
+  <select id="mode" class="mt-2 p-2 rounded">
+    <option value="short">Short</option>
+    <option value="long">Detailed</option>
+  </select>
+
+  <div id="history" class="mt-4 text-sm overflow-y-auto"></div>
+
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col">
+
+  <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+  <div class="p-4 flex gap-2 border-t">
+    <input id="topic" class="flex-1 p-3 rounded border"
+      placeholder="Ask anything...">
+
+    <button onclick="learnTopic()"
+      class="bg-blue-500 text-white px-4 rounded">
+      Send
     </button>
-
-    <button onclick="generateQuiz()" class="bg-green-500 text-white p-2 rounded mb-2">
-      📝 Quiz
-    </button>
-
-    <button onclick="showDashboard()" class="bg-purple-500 text-white p-2 rounded mb-2">
-      📊 Dashboard
-    </button>
-
-    <!-- HISTORY -->
-    <div id="history" class="mt-4 text-sm overflow-y-auto"></div>
-
   </div>
 
-  <!-- MAIN -->
-  <div class="flex-1 flex flex-col relative">
-
-    <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-
-    <!-- ⬇️ Latest -->
-    <button onclick="scrollBottom()"
-      class="fixed bottom-24 right-6 bg-blue-500 text-white px-3 py-2 rounded-full">
-      ⬇️
-    </button>
-
-    <!-- INPUT -->
-    <div class="p-4 flex gap-2 border-t dark:border-gray-700">
-
-      <input id="topic"
-        class="flex-1 p-3 rounded border dark:bg-[#020617]"
-        placeholder="Ask anything...">
-
-      <button onclick="learnTopic()"
-        class="bg-blue-500 text-white px-4 rounded">
-        Send
-      </button>
-
-    </div>
-
-  </div>
+</div>
 </div>
 
 <script src="./script.js"></script>
-
 </body>
 </html>
