@@ -1,39 +1,54 @@
 export default async function handler(req, res) {
   try {
-    const { topic } = req.body;
+    // ✅ Parse body safely (Vercel fix)
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body;
+
+    const { topic } = body;
+
+    if (!topic) {
+      return res.status(400).json({ result: "No topic provided" });
+    }
 
     // 🎯 Detect quiz request
     const isQuiz = topic.toLowerCase().includes("quiz");
 
+    // 🧠 Prompt Engineering
     const prompt = isQuiz
-      ? `Create EXACTLY 5 MCQs on "${topic.replace("quiz","")}".
+      ? `Create EXACTLY 5 multiple choice questions on "${topic.replace("quiz","")}".
 
-Return ONLY valid JSON.
-No explanation.
+Return ONLY JSON. No explanation.
 
-Format:
+Format strictly:
 [
   {
-    "question": "Question",
+    "question": "Question here",
     "options": ["A","B","C","D"],
     "answer": 0
   }
 ]`
-      : `Explain "${topic}" in structured format:
+      : `Explain "${topic}" in a structured, easy way for students.
+
+Use this format:
 
 ## 📘 Overview
 Simple explanation
 
 ## 🔑 Key Points
-- point
-- point
+- point 1
+- point 2
+- point 3
 
 ## 💡 Example
-Give example
+Give a simple real-life example
 
 ## 🧠 Summary
-Short conclusion`;
+Short conclusion
 
+Make it clean, clear, and engaging.`;
+
+    // 🌐 API Call (STABLE MODEL)
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -41,18 +56,38 @@ Short conclusion`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openrouter/auto",
-        messages: [{ role: "user", content: prompt }]
+        model: "meta-llama/llama-3-8b-instruct", // ✅ WORKING MODEL
+        messages: [
+          { role: "user", content: prompt }
+        ]
       })
     });
 
     const data = await response.json();
 
+    // 🔴 Error handling
+    if (!data.choices) {
+      return res.status(500).json({
+        result: "❌ API Error: " + JSON.stringify(data)
+      });
+    }
+
+    let output = data.choices[0].message.content;
+
+    // 🧹 Clean response (important for quiz JSON)
+    output = output
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // ✅ Send result
     res.status(200).json({
-      result: data.choices?.[0]?.message?.content || "Error"
+      result: output
     });
 
-  } catch (err) {
-    res.status(500).json({ result: err.message });
+  } catch (error) {
+    res.status(500).json({
+      result: "❌ Server Error: " + error.message
+    });
   }
 }
