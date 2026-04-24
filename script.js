@@ -1,85 +1,77 @@
+let username = localStorage.getItem("username") || "";
+
 // 🌙 THEME
 function toggleTheme(){
   document.documentElement.classList.toggle("dark");
 }
 
-// 🚀 START APP
+// 🚀 START
 function startApp(){
-  document.getElementById("landing").style.display = "none";
-  document.getElementById("app").style.display = "flex";
+  document.getElementById("landing").style.display="none";
+  document.getElementById("loaderPage").style.display="flex";
+
+  setTimeout(()=>{
+    document.getElementById("loaderPage").style.display="none";
+    document.getElementById("app").style.display="flex";
+
+    if(!username){
+      username = prompt("Enter your name:");
+      localStorage.setItem("username", username);
+    }
+
+    addAI(`👋 Hello ${username}! Ready to learn something new today? 🚀`);
+
+  },2000);
 }
 
 // 💬 CHAT
-let chats = JSON.parse(localStorage.getItem("chats")) || [];
-let progress = { quizzes:0, correct:0 };
-
 function addUser(text){
-  const div=document.createElement("div");
-  div.className="chat-user ml-auto p-3 rounded max-w-xl";
-  div.innerText=text;
-  chatBox.appendChild(div);
+  const d=document.createElement("div");
+  d.className="chat-user p-3 rounded ml-auto max-w-xl fade-in";
+  d.innerText=text;
+  chatBox.appendChild(d);
 }
 
 function addAI(text){
-  const div=document.createElement("div");
-  div.className="chat-ai p-3 rounded max-w-xl";
-  chatBox.appendChild(div);
-  stream(div, format(text));
+  const d=document.createElement("div");
+  d.className="chat-ai p-3 rounded max-w-xl fade-in cursor";
+  chatBox.appendChild(d);
+  stream(d, format(text));
 }
 
-// ⚡ FAST STREAM
+// ⚡ STREAM
 function stream(el,text){
   let i=0;
   function run(){
     if(i<text.length){
       el.innerHTML=text.slice(0,i);
-      i+=8;
-      setTimeout(run,3);
-    } else el.innerHTML=text;
+      i+=6;
+      setTimeout(run,5);
+    } else el.classList.remove("cursor");
   }
   run();
 }
 
 // 🧠 FORMAT
-function format(text){
-  return text
-    .replace(/## (.*)/g,"<h2 class='text-lg font-bold mt-3 text-blue-400'>$1</h2>")
+function format(t){
+  return t
+    .replace(/## (.*)/g,"<h2 class='text-lg font-bold text-blue-400 mt-3'>$1</h2>")
     .replace(/- (.*)/g,"<li>• $1</li>")
     .replace(/\n/g,"<br>");
 }
 
-// 🤖 THINKING
-function thinking(){
+// 🤖 THINK
+function thinking(msg="🤖 Thinking..."){
   const d=document.createElement("div");
   d.className="chat-ai p-3 animate-pulse";
-  d.innerText="🤖 AI thinking...";
+  d.innerText=msg;
   chatBox.appendChild(d);
   return d;
 }
 
-// 🔽 SCROLL
+// 🔽
 function scrollBottom(){
   chatBox.scrollTop=chatBox.scrollHeight;
-}
-
-// 💾 SAVE
-function saveChat(q,a){
-  chats.unshift({q,a});
-  localStorage.setItem("chats",JSON.stringify(chats));
-  loadHistory();
-}
-
-// 📜 HISTORY
-function loadHistory(){
-  const h=document.getElementById("history");
-  h.innerHTML="";
-  chats.slice(0,10).forEach(c=>{
-    const b=document.createElement("button");
-    b.innerText=c.q.slice(0,25)+"...";
-    b.className="block w-full text-left p-2 hover:bg-gray-300 dark:hover:bg-gray-700";
-    b.onclick=()=>{addUser(c.q);addAI(c.a);}
-    h.appendChild(b);
-  });
 }
 
 // 🤖 AI
@@ -92,23 +84,17 @@ async function learnTopic(){
 
   const t=thinking();
 
-  try{
-    const res=await fetch("/api/tutor",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({topic:text})
-    });
+  const mode=document.getElementById("mode").value;
 
-    const data=await res.json();
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:text,mode})
+  });
 
-    t.remove();
-    addAI(data.result);
-    saveChat(text,data.result);
-
-  }catch{
-    t.innerText="❌ Error";
-  }
-
+  const data=await res.json();
+  t.remove();
+  addAI(data.result);
   scrollBottom();
 }
 
@@ -117,36 +103,25 @@ async function generateQuiz(){
   const text=topic.value;
   if(!text) return alert("Enter topic");
 
-  const t=thinking();
+  const t=thinking("🧠 AI is creating your quiz...");
 
-  let quiz;
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:text+" quiz"})
+  });
 
-  try{
-    const res=await fetch("/api/tutor",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({topic:text+" quiz"})
-    });
-
-    const data=await res.json();
-    quiz=JSON.parse(data.result.replace(/```json|```/g,""));
-
-  }catch{
-    quiz=Array.from({length:5},()=>({
-      question:"Basic question?",
-      options:["A","B","C","D"],
-      answer:0
-    }));
-  }
-
+  const data=await res.json();
   t.remove();
+
+  const quiz=JSON.parse(data.result.replace(/```json|```/g,""));
   renderQuiz(quiz);
 }
 
-// 🎯 QUIZ UI
+// 🎯 QUIZ
 function renderQuiz(qs){
   const box=document.createElement("div");
-  box.className="chat-ai p-4 rounded";
+  box.className="chat-ai p-4 rounded fade-in";
 
   let score=0;
 
@@ -176,9 +151,7 @@ function renderQuiz(qs){
   submit.className="mt-4 bg-blue-500 text-white px-4 py-2 rounded";
 
   submit.onclick=()=>{
-    progress.quizzes++;
-    progress.correct+=score;
-    addAI(`🎯 Score: ${score}/${qs.length}`);
+    addAI(`🎯 Score: ${score}/${qs.length} 🚀`);
   };
 
   box.appendChild(submit);
@@ -187,21 +160,8 @@ function renderQuiz(qs){
 
 // 📊 DASHBOARD
 function showDashboard(){
-  const acc = progress.quizzes
-    ? Math.round((progress.correct/(progress.quizzes*5))*100)
-    : 0;
-
-  addAI(`📊 Dashboard
-
-📝 Quizzes: ${progress.quizzes}
-✅ Correct: ${progress.correct}
-🎯 Accuracy: ${acc}% 🚀`);
-}
-
-// 💬 NEW CHAT
-function newChat(){
-  chatBox.innerHTML="";
+  addAI("📊 Dashboard coming soon with charts 📈");
 }
 
 // INIT
-loadHistory();
+loadHistory?.();
