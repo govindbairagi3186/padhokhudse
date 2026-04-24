@@ -4,9 +4,6 @@
   <title>PADHOKHUDSE</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' }
-  </script>
 
   <style>
     body { font-family: system-ui; }
@@ -48,7 +45,7 @@
   <h1 class="text-5xl text-blue-500 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
   <p class="mb-6 text-gray-400">Learn smarter with AI 🚀</p>
 
-  <button onclick="startApp()" class="bg-blue-500 px-6 py-3 rounded hover:scale-105 transition">
+  <button onclick="startApp()" class="bg-blue-500 px-6 py-3 rounded">
     🚀 Start Learning
   </button>
 
@@ -57,42 +54,32 @@
   </p>
 </div>
 
-<!-- LOADING PAGE -->
+<!-- LOADER -->
 <div id="loaderPage" style="display:none;" class="h-screen flex flex-col justify-center items-center text-center">
-
   <h1 class="text-3xl mb-4">📚 PADHOKHUDSE</h1>
-
   <p id="motivation" class="animate-pulse text-lg mb-3"></p>
-
-  <p class="text-gray-500 text-sm">
-    Building your future… one step at a time 🚀
-  </p>
-
-  <p class="mt-6 text-xs text-gray-500">
-    By Govind Vaishnav 💗
-  </p>
-
+  <p class="text-gray-500 text-sm">Get ready to learn 🚀</p>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;" class="flex h-screen">
 
 <!-- SIDEBAR -->
-<div class="w-64 bg-[#020617] p-4 flex flex-col border-r border-gray-800">
+<div class="w-64 bg-[#020617] p-4 border-r border-gray-800">
 
-  <button onclick="newChat()" class="bg-blue-500 p-2 rounded mb-2">
+  <button onclick="newChat()" class="bg-blue-500 p-2 rounded mb-2 w-full">
     💬 New Chat
   </button>
 
-  <button onclick="generateQuiz()" class="bg-green-500 p-2 rounded mb-2">
+  <button onclick="generateQuiz()" class="bg-green-500 p-2 rounded mb-2 w-full">
     📝 Quiz
   </button>
 
-  <button onclick="showDashboard()" class="bg-purple-500 p-2 rounded mb-3">
+  <button onclick="showDashboard()" class="bg-purple-500 p-2 rounded mb-3 w-full">
     📊 Dashboard
   </button>
 
-  <select id="mode" class="p-2 rounded text-black">
+  <select id="mode" class="p-2 rounded text-black w-full">
     <option value="short">Short</option>
     <option value="long">Detailed</option>
   </select>
@@ -105,16 +92,11 @@
   <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
   <div class="p-4 flex gap-2 border-t border-gray-700">
-    <input id="topic" class="flex-1 p-3 rounded text-black"
-      placeholder="Ask anything...">
-
-    <button onclick="learnTopic()" class="bg-blue-500 px-4 rounded">
-      Send
-    </button>
+    <input id="topic" class="flex-1 p-3 rounded text-black" placeholder="Ask anything...">
+    <button onclick="learnTopic()" class="bg-blue-500 px-4 rounded">Send</button>
   </div>
 
 </div>
-
 </div>
 
 <script src="script.js"></script>
