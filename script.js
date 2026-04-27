@@ -1,304 +1,206 @@
-let username = localStorage.getItem("username") || "";
-let isLoading = false;
+let username = localStorage.getItem("username") || "User";
 
-let pdfPages = [];
-let chatMemory = [];
-
-let gameData = JSON.parse(localStorage.getItem("gameData")) || {
-  xp:0, level:1, streak:0, lastActive:null, badges:[]
-};
-
-// ================= START =================
 function startApp(){
   landing.style.display="none";
   app.style.display="flex";
-
-  if(!username){
-    username = prompt("Enter your name:");
-    localStorage.setItem("username", username);
-  }
-
-  updateStreak();
   newChat();
 }
 
-// ================= CHAT =================
+function showPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(page+"Page").classList.add("active");
+
+  if(page==="dashboard") loadDashboard();
+  if(page==="notes") loadNotes();
+  if(page==="shared") loadShared();
+}
+
+/* ===== AI NAME ===== */
+function getAIName(){
+  return document.body.classList.contains("dark") ? "VED 🤖" : "SHASTRA 📘";
+}
+
+/* ===== CHAT ===== */
 function newChat(){
   chatBox.innerHTML="";
-  addAI(`👋 Hello ${username}! I'm your AI tutor 🤖📚`);
+  addAI(`Hello ${username}! Ask me anything 🚀`);
 }
 
 function addUser(text){
-  const d=document.createElement("div");
-  d.className="chat-user p-3 rounded ml-auto max-w-xl";
-  d.innerText=text;
+  const row=document.createElement("div");
+  row.className="chat-row justify-end";
 
-  const share=document.createElement("button");
-  share.innerText="📤";
-  share.onclick=()=>shareQuestion(text);
+  const bubble=document.createElement("div");
+  bubble.className="bubble user-bubble";
+  bubble.innerText=text;
 
-  d.appendChild(share);
-  chatBox.appendChild(d);
-  scrollBottom();
+  const avatar=document.createElement("div");
+  avatar.className="avatar user-avatar";
+  avatar.innerText="🙂";
+
+  row.appendChild(bubble);
+  row.appendChild(avatar);
+
+  chatBox.appendChild(row);
 }
 
+/* ===== AI MESSAGE ===== */
 function addAI(text){
-  const d=document.createElement("div");
-  d.className="chat-ai p-4 rounded max-w-xl";
-  chatBox.appendChild(d);
+  const row=document.createElement("div");
+  row.className="chat-row";
 
-  stream(d, format(text));
+  const avatar=document.createElement("div");
+  avatar.className="avatar ai-avatar";
+  avatar.innerText="🤖";
 
-  const save=document.createElement("button");
-  save.innerText="📒 Save";
-  save.onclick=()=>saveNote(text);
-  d.appendChild(save);
+  const container=document.createElement("div");
+
+  const name=document.createElement("div");
+  name.className="text-xs text-gray-400";
+  name.innerText=getAIName();
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble ai-bubble";
+
+  container.appendChild(name);
+  container.appendChild(bubble);
+
+  row.appendChild(avatar);
+  row.appendChild(container);
+
+  chatBox.appendChild(row);
+
+  stream(bubble,text);
 }
 
-// ================= FORMAT =================
-function format(t){
-  return t
-    .replace(/## (.*)/g,"<h2 class='text-blue-400 font-bold mt-3'>$1</h2>")
-    .replace(/- (.*)/g,"<li>• $1</li>")
-    .replace(/\n/g,"<br>");
-}
-
-// ================= STREAM =================
+/* ===== STREAM ===== */
 function stream(el,text){
   let i=0;
   function run(){
     if(i<text.length){
       el.innerHTML=text.slice(0,i);
-      i+=30;
+      i+=20;
       requestAnimationFrame(run);
     }
   }
   run();
 }
 
-function scrollBottom(){
-  chatBox.scrollTop=chatBox.scrollHeight;
+/* ===== THINKING ===== */
+function showThinking(){
+  const row=document.createElement("div");
+  row.className="chat-row";
+
+  const avatar=document.createElement("div");
+  avatar.className="avatar ai-avatar";
+  avatar.innerText="🤖";
+
+  const box=document.createElement("div");
+
+  const name=document.createElement("div");
+  name.className="text-xs text-gray-400";
+  name.innerText=getAIName()+" is thinking...";
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble ai-bubble";
+
+  bubble.innerHTML=`<div class="typing"><span></span><span></span><span></span></div>`;
+
+  box.appendChild(name);
+  box.appendChild(bubble);
+
+  row.appendChild(avatar);
+  row.appendChild(box);
+
+  chatBox.appendChild(row);
+  return row;
 }
 
-// ================= AI =================
+/* ===== AI CALL ===== */
 async function learnTopic(){
-  if(isLoading) return;
-  isLoading=true;
-
   const text=topic.value;
-  if(!text){isLoading=false;return;}
+  if(!text) return;
 
   addUser(text);
   topic.value="";
 
-  const t=thinking();
+  const t=showThinking();
 
-  try{
-    const res=await fetch("/api/tutor",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        topic:text,
-        history:chatMemory.slice(-5)
-      })
-    });
-
-    const data=await res.json();
-    t.remove();
-
-    addAI(data.result);
-
-    chatMemory.push({role:"user",content:text});
-    chatMemory.push({role:"assistant",content:data.result});
-
-    addXP(10);
-    checkBadges();
-
-  }catch{
-    t.remove();
-    addAI("❌ Error");
-  }
-
-  isLoading=false;
-}
-
-// ================= QUIZ =================
-async function generateQuiz(){
-  const text=topic.value;
-  if(!text) return alert("Enter topic");
-
-  const t=thinking("🧠 Creating smart quiz...");
-
-  try{
-    const res=await fetch("/api/tutor",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({topic:text+" quiz"})
-    });
-
-    const data=await res.json();
-    t.remove();
-
-    let quiz;
-
-    try{
-      const clean=data.result.replace(/```json|```/g,"").trim();
-      quiz=JSON.parse(clean);
-    }catch{
-      quiz=Array.from({length:5}).map((_,i)=>({
-        question:`${text} Q${i+1}?`,
-        options:["A","B","C","D"],
-        answer:Math.floor(Math.random()*4),
-        explanation:"Revise concept"
-      }));
-    }
-
-    renderQuiz(quiz);
-
-  }catch{
-    t.remove();
-    addAI("❌ Quiz failed");
-  }
-}
-
-function renderQuiz(qs){
-  const box=document.createElement("div");
-  let score=0;
-
-  qs.forEach((q,i)=>{
-    const d=document.createElement("div");
-    d.className="mb-4 p-3 rounded bg-gray-800";
-
-    d.innerHTML=`<b>Q${i+1}. ${q.question}</b><br>`;
-
-    let answered=false;
-
-    q.options.forEach((o,idx)=>{
-      const b=document.createElement("button");
-      b.innerText=o;
-      b.className="block my-1 px-3 py-1 bg-gray-700 rounded";
-
-      b.onclick=()=>{
-        if(answered) return;
-        answered=true;
-
-        if(idx===q.answer){
-          score++;
-          b.style.background="green";
-        } else {
-          b.style.background="red";
-        }
-
-        d.querySelectorAll("button").forEach((btn,i2)=>{
-          if(i2===q.answer){
-            btn.style.border="2px solid yellow";
-          }
-        });
-
-        const exp=document.createElement("div");
-        exp.className="text-yellow-300 mt-2";
-        exp.innerText="💡 "+q.explanation;
-        d.appendChild(exp);
-      };
-
-      d.appendChild(b);
-    });
-
-    box.appendChild(d);
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:text})
   });
 
-  const submit=document.createElement("button");
-  submit.innerText="Submit";
-  submit.className="bg-blue-500 px-4 py-2 rounded";
+  const data=await res.json();
 
-  submit.onclick=()=>{
-    addAI(`🎯 Score: ${score}/${qs.length}`);
-    detectWeak(score, qs.length);
-    addXP(score*5);
-  };
-
-  box.appendChild(submit);
-  chatBox.appendChild(box);
+  t.remove();
+  addAI(data.result);
 }
 
-// ================= OTHER =================
-function practiceMode(){ topic.value+=" practice"; learnTopic(); }
-function examMode(){ generateQuiz(); }
+/* ===== QUIZ ===== */
+async function startQuiz(){
+  const text=quizTopic.value;
+  if(!text) return;
 
-function detectWeak(s,t){
-  if(s/t<0.5){
-    addAI("⚠️ Weak area detected. Revise again!");
-  }
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:text+" quiz"})
+  });
+
+  const data=await res.json();
+  const quiz=JSON.parse(data.result.replace(/```json|```/g,""));
+
+  quizBox.innerHTML="";
+  quiz.forEach(q=>{
+    const d=document.createElement("div");
+    d.innerHTML="<b>"+q.question+"</b>";
+    quizBox.appendChild(d);
+  });
 }
 
-function thinking(msg="🤖 Thinking..."){
-  const d=document.createElement("div");
-  d.innerText=msg;
-  chatBox.appendChild(d);
-  return d;
+/* ===== PRACTICE ===== */
+function startPractice(){
+  topic.value=practiceTopic.value+" practice";
+  showPage("chat");
+  learnTopic();
 }
 
-// ================= STORAGE =================
-function saveNote(t){
-  let n=JSON.parse(localStorage.getItem("notes")||"[]");
-  n.push(t);
-  localStorage.setItem("notes",JSON.stringify(n));
+/* ===== EXAM ===== */
+function startExam(){
+  let t=60;
+  examTimer.innerText="Time: "+t;
+
+  const x=setInterval(()=>{
+    t--;
+    examTimer.innerText="Time: "+t;
+    if(t<=0){clearInterval(x);alert("Time up");}
+  },1000);
+
+  startQuiz();
 }
 
-function showNotes(){
-  JSON.parse(localStorage.getItem("notes")||"[]")
-    .forEach(n=>addAI("📒 "+n));
+/* ===== DASHBOARD ===== */
+function loadDashboard(){
+  dLevel.innerText="1";
+  dXP.innerText="0";
+
+  new Chart(chart,{
+    type:"bar",
+    data:{
+      labels:["XP"],
+      datasets:[{label:"Progress",data:[10]}]
+    }
+  });
 }
 
-function shareQuestion(q){
-  let d=JSON.parse(localStorage.getItem("shared")||"[]");
-  d.push(q);
-  localStorage.setItem("shared",JSON.stringify(d));
+/* ===== NOTES ===== */
+function loadNotes(){
+  notesBox.innerHTML="No notes yet";
 }
 
-function showShared(){
-  JSON.parse(localStorage.getItem("shared")||"[]")
-    .forEach(q=>addAI("💬 "+q));
-}
-
-// ================= GAME =================
-function addXP(x){
-  gameData.xp+=x;
-  if(gameData.xp>=gameData.level*100){
-    gameData.level++;
-    gameData.xp=0;
-    addAI("🎉 Level Up!");
-  }
-  saveGame();
-}
-
-function updateStreak(){
-  const t=new Date().toDateString();
-  if(gameData.lastActive!==t){
-    gameData.streak++;
-    gameData.lastActive=t;
-    addAI(`🔥 Streak: ${gameData.streak}`);
-  }
-}
-
-function checkBadges(){
-  if(gameData.streak>=3 && !gameData.badges.includes("🔥")){
-    gameData.badges.push("🔥");
-    addAI("🏅 Badge unlocked!");
-  }
-}
-
-function saveGame(){
-  localStorage.setItem("gameData",JSON.stringify(gameData));
-}
-
-function showDashboard(){
-  addAI(`
-📊 Progress
-
-Level: ${gameData.level}
-XP: ${gameData.xp}
-Streak: ${gameData.streak}
-Badges: ${gameData.badges.join(",")}
-  `);
+/* ===== SHARED ===== */
+function loadShared(){
+  sharedBox.innerHTML="No shared questions";
 }
