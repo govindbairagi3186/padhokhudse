@@ -1,179 +1,160 @@
+// ================== GLOBAL ==================
 let username = localStorage.getItem("username") || "";
 let isLoading = false;
 
-// 🎯 MOTIVATION
-const lines = [
-  "💡 Keep learning, you're growing!",
-  "🚀 Your future is built today!",
-  "🔥 Stay consistent!",
-  "📚 Knowledge is power!",
-  "🌟 You can do it!"
-];
+let pdfPages = [];
+let chatMemory = [];
 
-// 🚀 START
+let gameData = JSON.parse(localStorage.getItem("gameData")) || {
+  xp:0, level:1, streak:0, lastActive:null, badges:[]
+};
+
+// ================== START ==================
 function startApp(){
   landing.style.display="none";
-  loaderPage.style.display="flex";
+  app.style.display="flex";
 
-  motivation.innerText = lines[Math.floor(Math.random()*lines.length)];
+  if(!username){
+    username = prompt("Enter your name:");
+    localStorage.setItem("username", username);
+  }
 
-  setTimeout(()=>{
-    loaderPage.style.display="none";
-    app.style.display="flex";
-
-    if(!username){
-      username = prompt("Enter your name:");
-      localStorage.setItem("username", username);
-    }
-
-    newChat();
-  },1200);
+  updateStreak();
+  newChat();
 }
 
-// 💬 NEW CHAT
+// ================== CHAT ==================
 function newChat(){
   chatBox.innerHTML="";
-  addAI(`👋 Hello ${username}! Ready to learn something new today? 🚀`);
+  addAI(`👋 Hello ${username}! I'm your AI assistant 🚀`);
 }
 
-// 👤 USER
 function addUser(text){
   const d=document.createElement("div");
-  d.className="chat-user p-3 rounded ml-auto max-w-xl fade";
+  d.className="chat-user p-3 rounded ml-auto max-w-xl";
   d.innerText=text;
+
+  const share=document.createElement("button");
+  share.innerText="📤";
+  share.onclick=()=>shareQuestion(text);
+
+  d.appendChild(share);
   chatBox.appendChild(d);
   scrollBottom();
 }
 
-// 🤖 AI
 function addAI(text){
   const d=document.createElement("div");
-  d.className="chat-ai p-4 rounded max-w-xl fade cursor";
+  d.className="chat-ai p-4 rounded max-w-xl";
   chatBox.appendChild(d);
-  stream(d, format(text));
+
+  stream(d, text);
+
+  const save=document.createElement("button");
+  save.innerText="📒 Save";
+  save.onclick=()=>saveNote(text);
+  d.appendChild(save);
 }
 
-// ⚡ FAST STREAM
 function stream(el,text){
   let i=0;
   function run(){
     if(i<text.length){
       el.innerHTML=text.slice(0,i);
-      i+=25;
+      i+=20;
       requestAnimationFrame(run);
-    } else {
-      el.innerHTML=text;
-      el.classList.remove("cursor");
     }
   }
   run();
 }
 
-// 🎨 FORMAT
-function format(t){
-  return t
-    .replace(/## (.*)/g,"<h2 class='text-blue-400 font-bold mt-3'>$1</h2>")
-    .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
-    .replace(/- (.*)/g,"<li>• $1</li>")
-    .replace(/\n/g,"<br>");
-}
-
-// 🤖 THINKING
-function thinking(msg="🤖 Thinking..."){
-  const d=document.createElement("div");
-  d.className="chat-ai p-3 animate-pulse";
-  d.innerText=msg;
-  chatBox.appendChild(d);
-  scrollBottom();
-  return d;
-}
-
-// 🔽 SCROLL
 function scrollBottom(){
-  setTimeout(()=>{
-    chatBox.scrollTop = chatBox.scrollHeight;
-  },50);
+  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// 🤖 AI CALL (FIXED)
+// ================== AI ==================
 async function learnTopic(){
   if(isLoading) return;
-  isLoading = true;
+  isLoading=true;
 
   const text=topic.value;
-  if(!text){
-    isLoading=false;
-    return;
-  }
+  if(!text){isLoading=false;return;}
 
   addUser(text);
   topic.value="";
 
   const t=thinking();
 
+  let context="";
+  const pageMatch = text.match(/page\s*(\d+)/i);
+
+  if(pageMatch && pdfPages.length){
+    const p=parseInt(pageMatch[1]);
+    const pg=pdfPages.find(x=>x.page===p);
+    if(pg) context=pg.text.slice(0,2000);
+  }
+
   try{
     const res=await fetch("/api/tutor",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        topic:text,
-        mode:document.getElementById("mode").value
+        topic: context ? `PDF:\n${context}\nQ:${text}` : text,
+        history: chatMemory.slice(-5)
       })
     });
 
     const data=await res.json();
     t.remove();
 
-    addAI(data.result || "⚠️ No response");
+    addAI(data.result);
+
+    chatMemory.push({role:"user",content:text});
+    chatMemory.push({role:"assistant",content:data.result});
+
+    addXP(10);
+    checkBadges();
 
   }catch{
     t.remove();
-    addAI("❌ Server error, try again");
+    addAI("❌ Error");
   }
 
   isLoading=false;
 }
 
-// 📝 QUIZ (FIXED)
+// ================== QUIZ ==================
 async function generateQuiz(){
-  if(isLoading) return;
-  isLoading=true;
-
   const text=topic.value;
-  if(!text){
-    alert("Enter topic");
-    isLoading=false;
-    return;
-  }
+  if(!text) return alert("Enter topic");
 
-  const t=thinking("🧠 AI is making quiz...");
+  const t=thinking("🧠 Quiz loading...");
 
+  const res=await fetch("/api/tutor",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({topic:text+" quiz"})
+  });
+
+  const data=await res.json();
+  t.remove();
+
+  let quiz;
   try{
-    const res=await fetch("/api/tutor",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({topic:text+" quiz"})
-    });
-
-    const data=await res.json();
-    t.remove();
-
-    const quiz=JSON.parse(data.result.replace(/```json|```/g,""));
-    renderQuiz(quiz);
-
+    quiz=JSON.parse(data.result.replace(/```json|```/g,""));
   }catch{
-    t.remove();
-    addAI("❌ Quiz failed");
+    quiz=[{
+      question:"Basic question?",
+      options:["A","B","C","D"],
+      answer:0
+    }];
   }
 
-  isLoading=false;
+  renderQuiz(quiz);
 }
 
-// 🎯 QUIZ UI
 function renderQuiz(qs){
   const box=document.createElement("div");
-  box.className="chat-ai p-4 rounded";
-
   let score=0;
 
   qs.forEach((q,i)=>{
@@ -183,11 +164,9 @@ function renderQuiz(qs){
     q.options.forEach((o,idx)=>{
       const b=document.createElement("button");
       b.innerText=o;
-      b.className="block w-full mt-2 border p-2 rounded";
 
       b.onclick=()=>{
-        d.querySelectorAll("button").forEach(x=>x.disabled=true);
-        if(idx===q.answer){b.style.background="green";score++;}
+        if(idx===q.answer){score++; b.style.background="green";}
         else b.style.background="red";
       };
 
@@ -199,17 +178,141 @@ function renderQuiz(qs){
 
   const submit=document.createElement("button");
   submit.innerText="Submit";
-  submit.className="mt-4 bg-blue-500 px-4 py-2 rounded";
 
   submit.onclick=()=>{
-    addAI(`🎯 Score: ${score}/${qs.length} 🚀`);
+    addAI(`🎯 Score: ${score}/${qs.length}`);
+    detectWeak(score, qs.length);
+    addXP(score*5);
   };
 
   box.appendChild(submit);
   chatBox.appendChild(box);
 }
 
-// 📊 DASHBOARD
+// ================== PRACTICE ==================
+async function practiceMode(){
+  topic.value += " practice";
+  learnTopic();
+}
+
+// ================== EXAM ==================
+async function examMode(){
+  let time=60;
+  const timer=setInterval(()=>{
+    time--;
+    if(time<=0){
+      clearInterval(timer);
+      addAI("⏱️ Time up!");
+    }
+  },1000);
+
+  generateQuiz();
+}
+
+// ================== WEAK ==================
+function detectWeak(score,total){
+  if(score/total < 0.5){
+    addAI("⚠️ Weak area detected. Revise this topic!");
+  }
+}
+
+// ================== PDF ==================
+async function handlePDF(){
+  const file=document.getElementById("pdfUpload").files[0];
+  if(!file) return;
+
+  const reader=new FileReader();
+
+  reader.onload=async function(){
+    const pdf=await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+
+    pdfPages=[];
+
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const text=content.items.map(x=>x.str).join(" ");
+
+      pdfPages.push({page:i,text});
+    }
+
+    addAI("📄 PDF ready!");
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+// ================== NOTES ==================
+function saveNote(text){
+  let notes=JSON.parse(localStorage.getItem("notes")||"[]");
+  notes.push(text);
+  localStorage.setItem("notes",JSON.stringify(notes));
+}
+
+function showNotes(){
+  const notes=JSON.parse(localStorage.getItem("notes")||"[]");
+  notes.forEach(n=>addAI("📒 "+n));
+}
+
+// ================== SHARE ==================
+function shareQuestion(q){
+  let data=JSON.parse(localStorage.getItem("shared")||"[]");
+  data.push(q);
+  localStorage.setItem("shared",JSON.stringify(data));
+}
+
+function showShared(){
+  const data=JSON.parse(localStorage.getItem("shared")||"[]");
+  data.forEach(q=>addAI("💬 "+q));
+}
+
+// ================== GAME ==================
+function addXP(x){
+  gameData.xp+=x;
+  if(gameData.xp>=gameData.level*100){
+    gameData.level++;
+    gameData.xp=0;
+    addAI("🎉 Level Up!");
+  }
+  saveGame();
+}
+
+function updateStreak(){
+  const today=new Date().toDateString();
+  if(gameData.lastActive!==today){
+    gameData.streak++;
+    gameData.lastActive=today;
+    addAI(`🔥 Streak: ${gameData.streak}`);
+  }
+}
+
+function checkBadges(){
+  if(gameData.streak>=3 && !gameData.badges.includes("🔥")){
+    gameData.badges.push("🔥");
+    addAI("🏅 Badge unlocked!");
+  }
+}
+
+function saveGame(){
+  localStorage.setItem("gameData",JSON.stringify(gameData));
+}
+
+// ================== DASHBOARD ==================
 function showDashboard(){
-  addAI("📊 Dashboard coming soon 🚀");
+  addAI(`
+📊 Progress
+
+Level: ${gameData.level}
+XP: ${gameData.xp}
+Streak: ${gameData.streak}
+Badges: ${gameData.badges.join(",")}
+  `);
+}
+
+// ================== THINKING ==================
+function thinking(msg="🤖 Thinking..."){
+  const d=document.createElement("div");
+  d.innerText=msg;
+  chatBox.appendChild(d);
+  return d;
 }
