@@ -4,53 +4,47 @@ export default async function handler(req, res) {
       ? JSON.parse(req.body)
       : req.body;
 
-    const { topic, mode } = body;
+    const { topic, history } = body;
 
-    // 🧠 SMART PROMPT
-    let prompt = "";
-
-    if (topic.toLowerCase().includes("quiz")) {
-      prompt = `Create 5 MCQs on "${topic}".
-Return ONLY JSON like:
-[
- { "question": "...", "options": ["A","B","C","D"], "answer": 0 }
-]`;
-    } else {
-      prompt = `
-You are a smart AI assistant like ChatGPT.
+    const prompt = `
+You are an AI tutor + assistant.
 
 User asked: "${topic}"
 
-👉 First understand the type:
-- If coding → give code + explanation
-- If math → solve step-by-step
-- If theory → explain clearly
-- If general → respond like helpful assistant
+STEP 1:
+Decide if it's STUDY or CASUAL.
 
-👉 Response style:
-- Use emojis where useful
-- Be engaging (not boring)
-- Use headings
+-----------------------------
 
-👉 Depth:
-${mode === "long" ? "Give detailed explanation with examples and tips." : "Keep it short but clear."}
+IF STUDY TOPIC:
+Give structured answer:
 
-👉 Format (only if topic is educational):
-## 🚀 Overview
+## 📚 Topic Overview
+Explain simply
+
 ## 📌 Key Points
+- Point 1
+- Point 2
+- Point 3
+
 ## 💡 Example
+Simple example
+
 ## 🧠 Extra Insight
+Important tip
+
 ## 🎯 Summary
+Short summary
 
-👉 If it's not educational:
-Respond naturally like ChatGPT (no strict format)
+-----------------------------
 
-👉 Always:
-- Be helpful
-- Be clear
-- Be slightly conversational
+IF CASUAL:
+Reply normally like ChatGPT
+
+-----------------------------
+
+Be clear, helpful, and slightly engaging.
 `;
-    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -61,14 +55,13 @@ Respond naturally like ChatGPT (no strict format)
       body: JSON.stringify({
         model: "openai/gpt-3.5-turbo",
         messages: [
+          ...(history || []),
           { role: "user", content: prompt }
         ]
       })
     });
 
     const data = await response.json();
-
-    console.log("API RESPONSE:", data);
 
     if (!data.choices) {
       return res.status(500).json({
