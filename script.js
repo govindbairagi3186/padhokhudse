@@ -26,7 +26,7 @@ function startApp(){
 // ================== CHAT ==================
 function newChat(){
   chatBox.innerHTML="";
-  addAI(`👋 Hello ${username}! I'm your AI assistant 🚀`);
+  addAI(`👋 Hello ${username}! I'm your AI assistant 🚀 + Friend Ask what you want to know`);
 }
 
 function addUser(text){
