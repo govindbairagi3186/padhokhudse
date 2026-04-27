@@ -13,65 +13,26 @@
       color:#e2e8f0;
     }
 
-    /* ===== GLASS ===== */
-    .glass {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-    }
-
-    /* ===== CHAT ===== */
-    .chat-row {
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-    }
-
+    .chat-row { display:flex; gap:10px; margin-bottom:10px; }
     .avatar {
-      width:35px;height:35px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      width:35px;height:35px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
     }
-
-    .ai-avatar { background:linear-gradient(135deg,#22c55e,#3b82f6); }
-    .user-avatar { background:linear-gradient(135deg,#9333ea,#f43f5e); }
+    .ai-avatar { background:#22c55e; }
+    .user-avatar { background:#9333ea; }
 
     .bubble {
-      padding:12px;
-      border-radius:14px;
-      max-width:600px;
-      animation:fadeIn .3s ease;
+      padding:12px;border-radius:12px;max-width:600px;
     }
-
     .ai-bubble { background:rgba(255,255,255,0.08); }
-    .user-bubble { background:linear-gradient(135deg,#3b82f6,#9333ea); }
+    .user-bubble { background:#3b82f6; margin-left:auto; }
 
-    @keyframes fadeIn {
-      from{opacity:0;transform:translateY(10px)}
-      to{opacity:1;transform:translateY(0)}
-    }
+    .page { display:none; }
+    .page.active { display:block; }
 
-    /* ===== PAGE ANIMATION ===== */
-    .page {
-      display:none;
-      opacity:0;
-      transform:translateX(20px);
-      transition:.3s;
-    }
-    .page.active {
-      display:block;
-      opacity:1;
-      transform:translateX(0);
-    }
-
-    /* ===== TYPING ===== */
-    .typing span{
-      width:6px;height:6px;
-      background:#ccc;
-      border-radius:50%;
-      display:inline-block;
-      margin:2px;
+    .typing span {
+      width:6px;height:6px;background:#ccc;border-radius:50%;
+      display:inline-block;margin:2px;
       animation:bounce 1.2s infinite;
     }
     .typing span:nth-child(2){animation-delay:.2s}
@@ -81,7 +42,6 @@
       0%,80%,100%{transform:scale(.6);opacity:.5}
       40%{transform:scale(1);opacity:1}
     }
-
   </style>
 </head>
 
@@ -99,7 +59,7 @@
 <div id="app" class="hidden flex h-screen">
 
 <!-- SIDEBAR -->
-<div class="w-64 p-4 glass flex flex-col">
+<div class="w-64 p-4 bg-black/40 flex flex-col">
   <button onclick="showPage('chat')">💬 Chat</button>
   <button onclick="showPage('quiz')">📝 Quiz</button>
   <button onclick="showPage('practice')">🎯 Practice</button>
@@ -110,50 +70,41 @@
 </div>
 
 <!-- CONTENT -->
-<div class="flex-1 relative">
+<div class="flex-1">
 
-<!-- CHAT -->
 <div id="chatPage" class="page active flex flex-col h-full">
-  <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+  <div id="chatBox" class="flex-1 overflow-y-auto p-6"></div>
 
   <div class="p-4 flex gap-2">
-    <input id="topic" class="flex-1 p-3 text-black rounded">
-    <button onclick="learnTopic()" class="bg-blue-500 px-4 rounded">Send</button>
+    <input id="topic" class="flex-1 p-2 text-black rounded">
+    <button onclick="learnTopic()" class="bg-blue-500 px-4">Send</button>
   </div>
 </div>
 
-<!-- QUIZ -->
 <div id="quizPage" class="page p-6">
   <input id="quizTopic" class="p-2 text-black rounded">
   <button onclick="startQuiz()" class="bg-green-500 px-3">Start</button>
   <div id="quizBox"></div>
 </div>
 
-<!-- PRACTICE -->
 <div id="practicePage" class="page p-6">
   <input id="practiceTopic" class="p-2 text-black rounded">
   <button onclick="startPractice()" class="bg-yellow-500 px-3">Start</button>
 </div>
 
-<!-- EXAM -->
 <div id="examPage" class="page p-6">
   <button onclick="startExam()" class="bg-red-500 px-4">Start Exam</button>
   <div id="examTimer"></div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboardPage" class="page p-6">
   <canvas id="chart"></canvas>
-  <p>Level: <span id="dLevel"></span></p>
-  <p>XP: <span id="dXP"></span></p>
 </div>
 
-<!-- NOTES -->
 <div id="notesPage" class="page p-6">
   <div id="notesBox"></div>
 </div>
 
-<!-- SHARED -->
 <div id="sharedPage" class="page p-6">
   <div id="sharedBox"></div>
 </div>
