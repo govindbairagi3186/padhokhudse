@@ -6,26 +6,53 @@ export default async function handler(req, res) {
 
     const { topic, history } = body;
 
-    const prompt = `
-You are an AI tutor + assistant.
+    const isQuiz = topic.toLowerCase().includes("quiz");
+
+    let prompt = "";
+
+    if (isQuiz) {
+      prompt = `
+Generate at least 5 multiple choice questions on "${topic.replace("quiz","")}".
+
+Return ONLY valid JSON:
+
+[
+  {
+    "question": "Question",
+    "options": ["A","B","C","D"],
+    "answer": 0
+  }
+]
+
+Rules:
+- Minimum 5 questions
+- Exactly 4 options
+- Correct answer index (0-3)
+- No explanation
+- No text outside JSON
+`;
+    } else {
+      prompt = `
+You are an expert AI tutor + assistant.
 
 User asked: "${topic}"
 
 STEP 1:
-Decide if it's STUDY or CASUAL.
+Detect if STUDY or CASUAL
 
------------------------------
+----------------------------
 
-IF STUDY TOPIC:
+IF STUDY:
 Give structured answer:
 
 ## 📚 Topic Overview
-Explain simply
+Explain clearly (3-4 lines)
 
 ## 📌 Key Points
 - Point 1
 - Point 2
 - Point 3
+- Point 4
 
 ## 💡 Example
 Simple example
@@ -34,17 +61,20 @@ Simple example
 Important tip
 
 ## 🎯 Summary
-Short summary
+Short conclusion
 
------------------------------
+----------------------------
 
 IF CASUAL:
 Reply normally like ChatGPT
 
------------------------------
+----------------------------
 
-Be clear, helpful, and slightly engaging.
+IMPORTANT:
+- Be descriptive
+- Do NOT give short answers
 `;
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
