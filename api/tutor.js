@@ -10,6 +10,7 @@ export default async function handler(req, res) {
 
     let prompt = "";
 
+    // ================= QUIZ =================
     if (isQuiz) {
       prompt = `
 Generate at least 5 multiple choice questions on "${topic.replace("quiz","")}".
@@ -20,7 +21,8 @@ Return ONLY valid JSON:
   {
     "question": "Question",
     "options": ["A","B","C","D"],
-    "answer": 0
+    "answer": 0,
+    "explanation": "Why this is correct"
   }
 ]
 
@@ -28,51 +30,59 @@ Rules:
 - Minimum 5 questions
 - Exactly 4 options
 - Correct answer index (0-3)
-- No explanation
-- No text outside JSON
+- Include explanation
+- No extra text
 `;
-    } else {
+    }
+
+    // ================= STUDY / CHAT =================
+    else {
       prompt = `
 You are an expert AI tutor + assistant.
 
 User asked: "${topic}"
 
 STEP 1:
-Detect if STUDY or CASUAL
+Detect if it is STUDY or CASUAL.
 
-----------------------------
+--------------------------------------
 
-IF STUDY:
-Give structured answer:
+IF STUDY TOPIC:
+Give FULL detailed explanation:
 
 ## 📚 Topic Overview
-Explain clearly (3-4 lines)
+Explain clearly in 5-6 lines (easy + detailed)
+
+## 🧩 Detailed Explanation
+Explain concept deeply step-by-step
 
 ## 📌 Key Points
-- Point 1
-- Point 2
-- Point 3
-- Point 4
+- Important point 1
+- Important point 2
+- Important point 3
+- Important point 4
+- Important point 5
 
 ## 💡 Example
-Simple example
+Give real-life or coding example
 
 ## 🧠 Extra Insight
-Important tip
+Give smart trick / deeper understanding
 
 ## 🎯 Summary
-Short conclusion
+Short final revision
 
-----------------------------
+--------------------------------------
 
 IF CASUAL:
-Reply normally like ChatGPT
+Reply normally like ChatGPT (friendly + helpful)
 
-----------------------------
+--------------------------------------
 
 IMPORTANT:
-- Be descriptive
+- Make answer DESCRIPTIVE
 - Do NOT give short answers
+- Make it useful for learning
 `;
     }
 
