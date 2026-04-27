@@ -4,9 +4,19 @@
   <title>PADHOKHUDSE</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
   <style>
-    body { font-family: system-ui; }
+    body {
+      font-family: system-ui;
+      background: linear-gradient(135deg,#020617,#0f172a,#1e293b);
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
 
     .chat-user {
       background: linear-gradient(135deg,#3b82f6,#9333ea);
@@ -14,39 +24,22 @@
     }
 
     .chat-ai {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
-
-    .fade { animation: fade 0.3s ease; }
-
-    @keyframes fade {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1; transform:translateY(0);}
-    }
-
-    .cursor::after {
-      content: "|";
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      50% {opacity:0;}
+      background: rgba(255,255,255,0.08);
+      color:#f1f5f9;
     }
   </style>
 </head>
 
-<body class="bg-[#020617] text-gray-200">
+<body class="text-gray-200">
 
 <!-- FRONT PAGE -->
 <div id="landing" class="h-screen flex flex-col justify-center items-center text-center">
-  <h1 class="text-5xl text-blue-500 mb-4">PADHOKHUDSE 🇮🇳❤️</h1>
-  <p class="mb-6 text-gray-400">Learn smarter with AI 🚀</p>
+  <h1 class="text-5xl font-bold mb-4">🤖 PADHOKHUDSE</h1>
+  <p class="text-gray-400 mb-6">AI Learning + Assistant Platform 🚀</p>
 
-  <button onclick="startApp()" class="bg-blue-500 px-6 py-3 rounded">
-    🚀 Start Learning
+  <button onclick="startApp()" 
+    class="px-6 py-3 rounded bg-gradient-to-r from-blue-500 to-purple-600">
+    Start Learning
   </button>
 
   <p class="absolute bottom-4 text-sm text-gray-500">
@@ -54,46 +47,55 @@
   </p>
 </div>
 
-<!-- LOADER -->
-<div id="loaderPage" style="display:none;" class="h-screen flex flex-col justify-center items-center text-center">
-  <h1 class="text-3xl mb-4">📚 PADHOKHUDSE</h1>
-  <p id="motivation" class="animate-pulse text-lg mb-3"></p>
-  <p class="text-gray-500 text-sm">Get ready to learn 🚀</p>
-</div>
-
 <!-- APP -->
 <div id="app" style="display:none;" class="flex h-screen">
 
 <!-- SIDEBAR -->
-<div class="w-64 bg-[#020617] p-4 border-r border-gray-800">
+<div class="w-64 p-4 glass flex flex-col overflow-y-auto">
 
-  <button onclick="newChat()" class="bg-blue-500 p-2 rounded mb-2 w-full">
-    💬 New Chat
+  <h2 class="text-xl mb-3">⚡ Menu</h2>
+
+  <button onclick="newChat()" class="mb-2 p-2 rounded bg-blue-500">💬 New Chat</button>
+  <button onclick="generateQuiz()" class="mb-2 p-2 rounded bg-green-500">📝 Quiz</button>
+  <button onclick="practiceMode()" class="mb-2 p-2 rounded bg-yellow-500">🎯 Practice</button>
+  <button onclick="examMode()" class="mb-2 p-2 rounded bg-red-500">⏱️ Exam</button>
+  <button onclick="showDashboard()" class="mb-2 p-2 rounded bg-purple-500">📊 Dashboard</button>
+  <button onclick="showNotes()" class="mb-2 p-2 rounded bg-orange-500">📒 Notes</button>
+  <button onclick="showShared()" class="mb-3 p-2 rounded bg-pink-500">🧑‍🤝‍🧑 Shared</button>
+
+  <hr class="my-2 border-gray-700">
+
+  <!-- PDF -->
+  <input type="file" id="pdfUpload" accept="application/pdf" class="mb-2 text-sm"/>
+  <button onclick="handlePDF()" class="bg-yellow-600 p-2 rounded mb-3">
+    📂 Upload PDF
   </button>
 
-  <button onclick="generateQuiz()" class="bg-green-500 p-2 rounded mb-2 w-full">
-    📝 Quiz
-  </button>
+  <hr class="my-2 border-gray-700">
 
-  <button onclick="showDashboard()" class="bg-purple-500 p-2 rounded mb-3 w-full">
-    📊 Dashboard
-  </button>
-
-  <select id="mode" class="p-2 rounded text-black w-full">
-    <option value="short">Short</option>
-    <option value="long">Detailed</option>
-  </select>
+  <!-- Quick Suggestions -->
+  <div class="text-sm text-gray-400 mb-2">Quick Topics</div>
+  <button onclick="quick('Python basics')" class="text-left text-sm mb-1">🐍 Python</button>
+  <button onclick="quick('AI explained')" class="text-left text-sm mb-1">🤖 AI</button>
+  <button onclick="quick('Motivate me')" class="text-left text-sm mb-1">🔥 Motivation</button>
+  <button onclick="quick('Startup ideas')" class="text-left text-sm mb-1">💡 Ideas</button>
 
 </div>
 
-<!-- CHAT -->
+<!-- CHAT AREA -->
 <div class="flex-1 flex flex-col">
 
   <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-  <div class="p-4 flex gap-2 border-t border-gray-700">
-    <input id="topic" class="flex-1 p-3 rounded text-black" placeholder="Ask anything...">
-    <button onclick="learnTopic()" class="bg-blue-500 px-4 rounded">Send</button>
+  <div class="p-4 flex gap-2 glass">
+    <input id="topic" 
+      class="flex-1 p-3 rounded text-black"
+      placeholder="Ask anything... (study, life, coding, ideas)">
+      
+    <button onclick="learnTopic()" 
+      class="px-4 rounded bg-gradient-to-r from-blue-500 to-purple-600">
+      Send
+    </button>
   </div>
 
 </div>
