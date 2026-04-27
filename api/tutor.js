@@ -10,79 +10,45 @@ export default async function handler(req, res) {
 
     let prompt = "";
 
-    // ================= QUIZ =================
+    // ===== QUIZ =====
     if (isQuiz) {
       prompt = `
-Generate at least 5 multiple choice questions on "${topic.replace("quiz","")}".
+Generate at least 5 MCQs on "${topic.replace("quiz","")}".
 
-Return ONLY valid JSON:
+Return ONLY JSON:
 
 [
   {
     "question": "Question",
     "options": ["A","B","C","D"],
     "answer": 0,
-    "explanation": "Why this is correct"
+    "explanation": "Why correct"
   }
 ]
-
-Rules:
-- Minimum 5 questions
-- Exactly 4 options
-- Correct answer index (0-3)
-- Include explanation
-- No extra text
 `;
     }
 
-    // ================= STUDY / CHAT =================
+    // ===== CHATGPT STYLE =====
     else {
       prompt = `
-You are an expert AI tutor + assistant.
+You are a smart AI tutor + assistant.
 
-User asked: "${topic}"
+User: "${topic}"
 
-STEP 1:
-Detect if it is STUDY or CASUAL.
+Respond like ChatGPT:
 
---------------------------------------
+- Natural conversational tone
+- Short paragraphs (2–4 lines)
+- Clear explanation
+- Add examples if helpful
+- Add simple diagrams only if useful
+- Avoid rigid headings
+- Keep it engaging and easy to read
 
-IF STUDY TOPIC:
-Give FULL detailed explanation:
+If study topic → explain clearly
+If casual → respond normally
 
-## 📚 Topic Overview
-Explain clearly in 5-6 lines (easy + detailed)
-
-## 🧩 Detailed Explanation
-Explain concept deeply step-by-step
-
-## 📌 Key Points
-- Important point 1
-- Important point 2
-- Important point 3
-- Important point 4
-- Important point 5
-
-## 💡 Example
-Give real-life or coding example
-
-## 🧠 Extra Insight
-Give smart trick / deeper understanding
-
-## 🎯 Summary
-Short final revision
-
---------------------------------------
-
-IF CASUAL:
-Reply normally like ChatGPT (friendly + helpful)
-
---------------------------------------
-
-IMPORTANT:
-- Make answer DESCRIPTIVE
-- Do NOT give short answers
-- Make it useful for learning
+Do NOT sound robotic.
 `;
     }
 
@@ -103,14 +69,8 @@ IMPORTANT:
 
     const data = await response.json();
 
-    if (!data.choices) {
-      return res.status(500).json({
-        result: "❌ API Error: " + JSON.stringify(data)
-      });
-    }
-
     res.status(200).json({
-      result: data.choices[0].message.content
+      result: data.choices?.[0]?.message?.content || "❌ AI Error"
     });
 
   } catch (error) {
